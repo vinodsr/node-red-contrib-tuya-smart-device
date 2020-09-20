@@ -1,0 +1,19 @@
+{
+  "name": "red-contrib-tuya-smart-device",
+  "version": "1.0.0",
+  "description": "A node-red module to interact with the tuya smart devices",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Vinod S R",
+  "license": "MIT",
+  "node-red": {
+    "nodes": {
+      "tuya-smart-device": "src/tuya-smart-device.js"
+    }
+  },
+  "dependencies": {
+    "tuyapi": "^5.3.1"
+  }
+}

@@ -1,16 +1,16 @@
 <script type="text/javascript">
     RED.nodes.registerType('tuya-smart-device', {
         category: 'smarthome',
-        color: '#93E5AB',
+        color: '#C7E9C0',
         defaults: {
-            name: { value: "", required: true },
-            id: { value: "", required: true },
-            key: { value: "", required: true },
+            deviceName: { value: "", required: true },
+            deviceId: { value: "", required: true },
+            deviceKey: { value: "", required: true },
 
         },
         inputs: 1,
         outputs: 1,
-        icon: "device.png",
+        icon: "bridge.svg",
         label: function () {
             return this.name || "tuya smart device";
         }
@@ -20,15 +20,15 @@
 <script type="text/html" data-template-name="tuya-smart-device">
     <div class="form-row">
         <label for="node-input-name"><i class="fa fa-tag"></i> Device Name</label>
-        <input type="text" id="node-input-name" placeholder="Bulb">
+        <input type="text" id="node-input-deviceName" placeholder="Bulb">
     </div>
     <div class="form-row">
         <label for="node-input-name"><i class="fa fa-id-card-o"></i> Device Virtual ID</label>
-        <input type="text" id="node-input-id" placeholder="">
+        <input type="text" id="node-input-deviceId" placeholder="">
     </div>
     <div class="form-row">
         <label for="node-input-name"><i class="fa fa-key"></i> Device Key</label>
-        <input type="text" id="node-input-key" placeholder="">
+        <input type="text" id="node-input-deviceKey" placeholder="">
     </div>
 </script>
 
@@ -37,7 +37,7 @@
     <div>Instructions for getting the device id is available  <a href="https://github.com/codetheweb/tuyapi/blob/master/docs/SETUP.md">here</a></div>
     <div>The node takes the data which needs to be sent to the device. 
         It will read the following variables from the payload.
-
+        <div><code>operation</code> <b>SET</b> to turn device on or off or change color. <b>GET</b> to get the current status of the device. <i>default : SET</i></div>
         <div><code>dps</code> The dps index of the device.</div>
         <div><code>set</code> The value which needs to be set.</div>
 </script>

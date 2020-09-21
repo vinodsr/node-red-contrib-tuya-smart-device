@@ -8,7 +8,16 @@ module.exports = function (RED) {
         this.deviceId = config.deviceId;
         this.deviceKey = config.deviceKey;
         node.on('input', function (msg) {
-            tuyaDevice.set(msg.payload);
+            let operation = msg.payload.operation || 'SET';
+            delete msg.payload.operation;
+            switch (operation) {
+                case "SET":
+                    tuyaDevice.set(msg.payload);
+                    break;
+                case "GET":
+                    tuyaDevice.get(msg.payload);
+                    break;
+            }
         });
         node.status({ fill: "yellow", shape: "ring", text: "connecting" });
         let setStatusConnected = function () { return node.status({ fill: "green", shape: "ring", text: "connected" }); };

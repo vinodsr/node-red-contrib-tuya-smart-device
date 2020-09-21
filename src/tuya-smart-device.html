@@ -12,7 +12,7 @@
         outputs: 1,
         icon: "bridge.svg",
         label: function () {
-            return this.name || "tuya smart device";
+            return this.deviceName || "tuya smart device";
         }
     });
 </script>
@@ -40,4 +40,5 @@
         <div><code>operation</code> <b>SET</b> to turn device on or off or change color. <b>GET</b> to get the current status of the device. <i>default : SET</i></div>
         <div><code>dps</code> The dps index of the device.</div>
         <div><code>set</code> The value which needs to be set.</div>
+        <div>The payload can be of the same format as https://codetheweb.github.io/tuyapi/index.html#tuyadeviceset</div>
 </script>

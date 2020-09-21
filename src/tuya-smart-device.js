@@ -4,9 +4,9 @@ module.exports = function (RED) {
     function TuyaSmartDeviceNode(config) {
         RED.nodes.createNode(this, config);
         var node = this;
-        this.name = config.name;
-        this.id = config.id;
-        this.key = config.key;
+        this.deviceName = config.deviceName;
+        this.deviceId = config.deviceId;
+        this.deviceKey = config.deviceKey;
         node.on('input', function (msg) {
             tuyaDevice.set(msg.payload);
         });
@@ -19,8 +19,8 @@ module.exports = function (RED) {
         };
 
         let tuyaDevice = new TuyaDevice({
-            id: node.id,
-            key: node.key,
+            id: node.deviceId,
+            key: node.deviceKey,
         });
 
 
@@ -31,7 +31,7 @@ module.exports = function (RED) {
         });
         // Add event listeners
         tuyaDevice.on('connected', () => {
-            node.log('Connected to device! ' + this.id);
+            node.log('Connected to device! ' + node.deviceId);
             setStatusConnected();
         });
 
@@ -53,8 +53,8 @@ module.exports = function (RED) {
             node.send({
                 payload: {
                     data: data,
-                    deviceId: node.id,
-                    deviceName: node.name
+                    deviceId: node.deviceId,
+                    deviceName: node.deviceName
                 }
             });
         });

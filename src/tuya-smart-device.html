@@ -3,9 +3,9 @@
         category: 'smarthome',
         color: '#C7E9C0',
         defaults: {
-            name: { value: "", required: true },
-            id: { value: "", required: true },
-            key: { value: "", required: true },
+            deviceName: { value: "", required: true },
+            deviceId: { value: "", required: true },
+            deviceKey: { value: "", required: true },
 
         },
         inputs: 1,
@@ -20,15 +20,15 @@
 <script type="text/html" data-template-name="tuya-smart-device">
     <div class="form-row">
         <label for="node-input-name"><i class="fa fa-tag"></i> Device Name</label>
-        <input type="text" id="node-input-name" placeholder="Bulb">
+        <input type="text" id="node-input-deviceName" placeholder="Bulb">
     </div>
     <div class="form-row">
         <label for="node-input-name"><i class="fa fa-id-card-o"></i> Device Virtual ID</label>
-        <input type="text" id="node-input-id" placeholder="">
+        <input type="text" id="node-input-deviceId" placeholder="">
     </div>
     <div class="form-row">
         <label for="node-input-name"><i class="fa fa-key"></i> Device Key</label>
-        <input type="text" id="node-input-key" placeholder="">
+        <input type="text" id="node-input-deviceKey" placeholder="">
     </div>
 </script>
 

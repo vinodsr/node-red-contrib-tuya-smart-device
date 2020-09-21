@@ -1,7 +1,7 @@
 <script type="text/javascript">
     RED.nodes.registerType('tuya-smart-device', {
         category: 'smarthome',
-        color: '#93E5AB',
+        color: '#C7E9C0',
         defaults: {
             name: { value: "", required: true },
             id: { value: "", required: true },
@@ -10,7 +10,7 @@
         },
         inputs: 1,
         outputs: 1,
-        icon: "device.png",
+        icon: "bridge.svg",
         label: function () {
             return this.name || "tuya smart device";
         }
@@ -37,7 +37,7 @@
     <div>Instructions for getting the device id is available  <a href="https://github.com/codetheweb/tuyapi/blob/master/docs/SETUP.md">here</a></div>
     <div>The node takes the data which needs to be sent to the device. 
         It will read the following variables from the payload.
-
+        <div><code>operation</code> <b>SET</b> to turn device on or off or change color. <b>GET</b> to get the current status of the device. <i>default : SET</i></div>
         <div><code>dps</code> The dps index of the device.</div>
         <div><code>set</code> The value which needs to be set.</div>
 </script>

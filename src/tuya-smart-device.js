@@ -3,7 +3,8 @@ const TuyaDevice = require("tuyapi");
 module.exports = function (RED) {
     function TuyaSmartDeviceNode(config) {
         RED.nodes.createNode(this, config);
-        var node = this;
+        let node = this;
+        let shouldTryReconnect = true;
         this.deviceName = config.deviceName;
         this.deviceId = config.deviceId;
         this.deviceKey = config.deviceKey;
@@ -19,7 +20,7 @@ module.exports = function (RED) {
                     break;
             }
         });
-        node.status({ fill: "yellow", shape: "ring", text: "connecting" });
+        let setStatusConnecting = function () { return node.status({ fill: "yellow", shape: "ring", text: "connecting" }); };
         let setStatusConnected = function () { return node.status({ fill: "green", shape: "ring", text: "connected" }); };
         let setStatusDisconnected = function () { return node.status({ fill: "red", shape: "ring", text: "disconnected" }); };
         var setStatusOnError = function (e) {
@@ -36,8 +37,11 @@ module.exports = function (RED) {
         node.on('close', function () {
             // tidy up any state
             // clearInterval(int);
+            shouldTryReconnect = false;
             tuyaDevice.disconnect();
         });
+
+
         // Add event listeners
         tuyaDevice.on('connected', () => {
             node.log('Connected to device! ' + node.deviceId);
@@ -47,8 +51,12 @@ module.exports = function (RED) {
         tuyaDevice.on('disconnected', () => {
             node.log('Disconnected from tuyaDevice.');
             setStatusDisconnected();
-            setTimeout(() => {
-            }, 1000)
+            if (shouldTryReconnect) {
+                setTimeout(() => {
+                    connectDevice();
+                }, 1000)
+            }
+
         });
 
         tuyaDevice.on('error', error => {
@@ -68,9 +76,14 @@ module.exports = function (RED) {
             });
         });
 
+        let connectDevice = () => {
+            setStatusConnecting();
+            tuyaDevice.connect();
+        }
+
         tuyaDevice.find().then(() => {
             // Connect to device
-            tuyaDevice.connect();
+            connectDevice();
         }).catch(setStatusOnError);
     }
     RED.nodes.registerType("tuya-smart-device", TuyaSmartDeviceNode);

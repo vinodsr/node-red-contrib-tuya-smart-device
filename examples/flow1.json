@@ -1,0 +1,113 @@
+[
+    {
+        "id": "710558fa.25dab8",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "3a3e92ea.365dde",
+        "type": "inject",
+        "z": "710558fa.25dab8",
+        "name": "Turn On",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "true",
+        "payloadType": "bool",
+        "x": 160,
+        "y": 80,
+        "wires": [
+            [
+                "17eada0e.06e1e6"
+            ]
+        ]
+    },
+    {
+        "id": "17eada0e.06e1e6",
+        "type": "function",
+        "z": "710558fa.25dab8",
+        "name": "",
+        "func": "msg.payload ={\n   dps : 1,\n    set : msg.payload\n}\n\n/*\n\n    */\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 400,
+        "y": 180,
+        "wires": [
+            [
+                "666b465.a3faeb8"
+            ]
+        ]
+    },
+    {
+        "id": "d2982ffe.c64bb",
+        "type": "debug",
+        "z": "710558fa.25dab8",
+        "name": "Monitor Log",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 830,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "8343da8c.df5808",
+        "type": "inject",
+        "z": "710558fa.25dab8",
+        "name": "Turn Off",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "false",
+        "payloadType": "bool",
+        "x": 130,
+        "y": 240,
+        "wires": [
+            [
+                "17eada0e.06e1e6"
+            ]
+        ]
+    },
+    {
+        "id": "666b465.a3faeb8",
+        "type": "tuya-smart-device",
+        "z": "710558fa.25dab8",
+        "deviceName": "Monitor Plug",
+        "deviceId": "ID OF DEVICE , Read Instructions",
+        "deviceKey": "KEY OF THE DEVICE",
+        "x": 570,
+        "y": 180,
+        "wires": [
+            [
+                "d2982ffe.c64bb"
+            ]
+        ]
+    }
+]

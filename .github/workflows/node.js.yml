@@ -1,0 +1,46 @@
+# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: Node.js CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [10.x, 12.x, 14.x]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: npm install
+    - name: npm bump
+    # You may pin to the exact commit or the version.
+    # uses: bcomnes/npm-bump@5b356bdb89d503018e7f114bec21649d6e0469a3
+    uses: bcomnes/npm-bump@v2.0.1
+    with:
+      # The email address used to create the version commit with.
+      git_email: smartvinu@gmail.com 
+      # The name to use for the version commit. e.g. github.actor
+      git_username: vinodsr
+      # The version bump type to perform (e.g. major, minor, path). See npm version docs for more info.  Pass this as an interactive variable.
+      newversion: minor
+      # Run git push --follow-tags after running npm version.  Enable this if you dont configure a prepublishOnly hook that pushes git commits.
+      push_version_commit: # optional
+      # The command to run after npm version.  Useful if you are just using npm to version a package, but not publish to npm (like an action).
+      publish_cmd: # optional, default is npm publish
+      # Pass the secrets.GITHUB_TOKEN to enable gh-release capabilities.
+      github_token: # optional
+      # An npm token scoped for publishing.  Used to create the release.
+      npm_token: 2548f53a-a94f-48cb-b11f-b419410692ee

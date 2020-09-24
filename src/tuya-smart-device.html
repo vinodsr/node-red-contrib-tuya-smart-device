@@ -34,11 +34,73 @@
 
 <script type="text/html" data-help-name="tuya-smart-device">
     <p>This node will help you to configure any tuya smart device.</p>
-    <div>Instructions for getting the device id is available  <a href="https://github.com/codetheweb/tuyapi/blob/master/docs/SETUP.md">here</a></div>
-    <div>The node takes the data which needs to be sent to the device. 
-        It will read the following variables from the payload.
-        <div><code>operation</code> <b>SET</b> to turn device on or off or change color. <b>GET</b> to get the current status of the device. <i>default : SET</i></div>
-        <div><code>dps</code> The dps index of the device.</div>
-        <div><code>set</code> The value which needs to be set.</div>
-        <div>The payload can be of the same format as https://codetheweb.github.io/tuyapi/index.html#tuyadeviceset</div>
+
+    <h3>Details</h3>
+    <p>Instructions for getting the device id is available <a href="https://github.com/codetheweb/tuyapi/blob/master/docs/SETUP.md">here</a></p>
+   
+    <code>You will get the device id and the key once you run the wizard program as per the instructiions</code>
+    
+    
+    <p>The node takes the input which needs to be sent to the device and outouts the message if the state of the device changes.</p>
+        
+
+
+    <h3>Input</h3>
+    <h4>payload</h4>
+    <dl class="message-properties">
+        <dt class="optional">operation
+            <span class="property-type">SET/GET</span>
+        </dt>
+        <dd> 
+            <p>SET (default): Use SET the run a set operation in the device
+            <a href="https://codetheweb.github.io/tuyapi/index.html#tuyadeviceset">SET documentation</a> </p>
+            <p>GET: Use GET the run a get operation in the device
+            <a href="https://codetheweb.github.io/tuyapi/index.html#tuyadeviceget">GET documentation</a></p>
+            Any output of the operation will be triggered on the output of the node.
+        </dd>
+        <dt class="">dps <span class="property-type">Number</span></dt>
+        <dd>The dps index you want to update or query</dd>
+        <dt class="">set <span class="property-type">Any</span></dt>
+        <dd>The value you want to set for the dps index</dd>
+        <dt class="optional">multiple <span class="property-type">Boolean</span></dt>
+        <dd>Incase you want to send multiple dps index. Use the data argument in that case.</dd>
+        <dt class="optional">data <span class="property-type">Object</span></dt>
+        <dd>Object of the below format with multiple dps index and the values
+            <code>
+                payload = {
+                    "multiple": true,
+                    "data": {
+                        "20": true,
+                        "24": "00e203e803de"
+                    }
+                }</code>
+        </dd>
+    </dl>
+
+
+    <h3>Output</h3>
+    <dl class="message-properties">
+        <dt class="">deviceId
+            <span class="property-type">String</span>
+        </dt>
+        <dd> 
+           Device Id
+        </dd>
+        <dt class="">deviceName <span class="property-type">String</span></dt>
+        <dd>Device Name</dd>
+        <dt class="optional">data <span class="property-type">Object</span></dt>
+        <dd>The response from the Tuya device. Sample response is shown below.
+            <code>
+                data: {
+                   dps : {
+                       1 : false
+                   },
+                   t: 1600955043 
+                },
+                deviceId: "39390e7421ia",
+                deviceName: "Monitor Plug"
+                </code>
+        </dd>
+    </dl>
+
 </script>

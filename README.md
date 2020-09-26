@@ -1,5 +1,6 @@
 # node-red-contrib-tuya-smart-device
-![Node.js CI](https://github.com/vinodsr/node-red-contrib-tuya-smart-device/workflows/Node.js%20CI/badge.svg?branch=master)
+
+![Build and Publish package](https://github.com/vinodsr/node-red-contrib-tuya-smart-device/workflows/Build%20and%20Publish%20package/badge.svg)
 
 A node-red module which helps you to connect to any tuya device.
 

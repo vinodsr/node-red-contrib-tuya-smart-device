@@ -2,7 +2,7 @@
   "name": "red-contrib-tuya-smart-device",
   "version": "1.0.0",
   "description": "A node-red module to interact with the tuya smart devices",
-  "repository": "https://github.com/vinodsr/node-red-contrib-tuya-smart-device"
+  "repository": "https://github.com/vinodsr/node-red-contrib-tuya-smart-device",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

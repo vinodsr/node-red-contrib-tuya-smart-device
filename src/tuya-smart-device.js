@@ -89,7 +89,7 @@ module.exports = function (RED) {
             if (findTimeout) {
                 clearTimeout(findTimeout);
             }
-            if (tuyaDevice.isConnected === false) {
+            if (tuyaDevice.isConnected() === false) {
                 setStatusConnecting();
                 tuyaDevice.connect();
             } else {

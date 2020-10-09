@@ -4,6 +4,7 @@ module.exports = function (RED) {
     function TuyaSmartDeviceNode(config) {
         RED.nodes.createNode(this, config);
         let node = this;
+        let isConnected = false;
         let shouldTryReconnect = true;
         this.deviceName = config.deviceName;
         this.deviceId = config.deviceId;
@@ -23,9 +24,9 @@ module.exports = function (RED) {
         let setStatusConnecting = function () { return node.status({ fill: "yellow", shape: "ring", text: "connecting" }); };
         let setStatusConnected = function () { return node.status({ fill: "green", shape: "ring", text: "connected" }); };
         let setStatusDisconnected = function () { return node.status({ fill: "red", shape: "ring", text: "disconnected" }); };
-        var setStatusOnError = function (e) {
+        var setStatusOnError = function (e, message = "error") {
             node.error(e, "An error had occured ");
-            return node.status({ fill: "red", shape: "ring", text: "error" });
+            return node.status({ fill: "red", shape: "ring", text: message });
         };
 
         let tuyaDevice = new TuyaDevice({
@@ -33,7 +34,15 @@ module.exports = function (RED) {
             key: node.deviceKey,
         });
 
-
+        let retryTimer = null;
+        let retryConnection = () => {
+            if (retryTimer !== null) {
+                clearTimeout(retryTimer);
+            }
+            retryTimer = setTimeout(() => {
+                connectDevice();
+            }, 1000)
+        }
         node.on('close', function () {
             // tidy up any state
             // clearInterval(int);
@@ -52,20 +61,20 @@ module.exports = function (RED) {
             node.log('Disconnected from tuyaDevice.');
             setStatusDisconnected();
             if (shouldTryReconnect) {
-                setTimeout(() => {
-                    connectDevice();
-                }, 1000)
+                retryConnection();
             }
 
         });
 
         tuyaDevice.on('error', error => {
             setStatusOnError(error);
+            if (shouldTryReconnect) {
+                retryConnection();
+            }
         });
 
         tuyaDevice.on('data', data => {
             node.log(data, 'Data from device:');
-
             setStatusConnected();
             node.send({
                 payload: {
@@ -75,16 +84,34 @@ module.exports = function (RED) {
                 }
             });
         });
-
+        let findTimeout = null;
         let connectDevice = () => {
-            setStatusConnecting();
-            tuyaDevice.connect();
+            if (findTimeout) {
+                clearTimeout(findTimeout);
+            }
+            if (tuyaDevice.isConnected === false) {
+                setStatusConnecting();
+                tuyaDevice.connect();
+            } else {
+                node.log("already connected. skippig the connect call");
+                setStatusConnected();
+            }
         }
+        let findDevice = () => {
+            setStatusConnecting();
+            node.log("initiating the find command");
+            tuyaDevice.find().then(() => {
+                // Connect to device
+                connectDevice();
+            }).catch((e) => {
+                // We need to retry 
+                setStatusOnError(e, "Can't find device");
+                node.log("Cannot find the device, re-trying...");
+                setTimeout(findDevice, 1000);
+            });
+        }
+        findDevice();
 
-        tuyaDevice.find().then(() => {
-            // Connect to device
-            connectDevice();
-        }).catch(setStatusOnError);
     }
     RED.nodes.registerType("tuya-smart-device", TuyaSmartDeviceNode);
 }

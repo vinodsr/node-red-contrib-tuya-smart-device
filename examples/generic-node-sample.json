@@ -1,0 +1,60 @@
+[
+    {
+        "id": "d02f0b73.f777d8",
+        "type": "tuya-smart-device-generic",
+        "z": "9a81ce58.d22ba",
+        "x": 510,
+        "y": 40,
+        "wires": [
+            [
+                "33e4c898.376958"
+            ]
+        ]
+    },
+    {
+        "id": "33e4c898.376958",
+        "type": "debug",
+        "z": "9a81ce58.d22ba",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 750,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "e29b75b3.7db9a8",
+        "type": "inject",
+        "z": "9a81ce58.d22ba",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"deviceVirtualId\":\"<virtualID>\",\"deviceKey\":\"<key>\",\"deviceName\":\"test\",\"operation\":\"SET\",\"payload\":{\"dps\":1,\"set\":true}}",
+        "payloadType": "json",
+        "x": 290,
+        "y": 40,
+        "wires": [
+            [
+                "d02f0b73.f777d8"
+            ]
+        ]
+    }
+]

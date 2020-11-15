@@ -74,7 +74,7 @@ module.exports = function (RED) {
         });
 
         tuyaDevice.on('data', data => {
-            node.log(data, 'Data from device:');
+            node.log(`Data from device: ${JSON.stringify(data)}`);
             setStatusConnected();
             node.send({
                 payload: {

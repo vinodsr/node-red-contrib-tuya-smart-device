@@ -2,7 +2,7 @@
 
 ## 1.2.1
 
-Fixes #25
+Fixes [#25](https://github.com/vinodsr/node-red-contrib-tuya-smart-device/issues/25)
 
 ## 1.2.0
 * Added a generic SET node which can be controller with message.payload. One node to set command for many devices. Thanks to formatBCE for the suggestion.

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.1
+
+Fixes #25
+
 ## 1.2.0
 * Added a generic SET node which can be controller with message.payload. One node to set command for many devices. Thanks to formatBCE for the suggestion.
 

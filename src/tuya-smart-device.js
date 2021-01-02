@@ -33,6 +33,8 @@ module.exports = function (RED) {
         let tuyaDevice = new TuyaDevice({
             id: node.deviceId,
             key: node.deviceKey,
+            issueGetOnConnect: false,
+            nullPayloadOnJSONError: false,
         });
 
         let retryTimer = null;

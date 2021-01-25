@@ -8,6 +8,9 @@ module.exports = function (RED) {
         let shouldTryReconnect = true;
         this.deviceName = config.deviceName;
         this.deviceId = config.deviceId;
+        this.deviceIp = config.deviceIp;
+        this.retryTimeout = (config.retryTimeout == null || isNaN(config.retryTimeout))? 1000 : config.retryTimeout;
+        this.findTimeout = (config.findTimeout == null || isNaN(config.findTimeout))? 1000 : config.findTimeout;
         let findTimeout = null;
         this.deviceKey = config.deviceKey;
         node.on('input', function (msg) {
@@ -33,6 +36,7 @@ module.exports = function (RED) {
         let tuyaDevice = new TuyaDevice({
             id: node.deviceId,
             key: node.deviceKey,
+            ip: node.deviceIp,
             issueGetOnConnect: false,
             nullPayloadOnJSONError: false,
         });
@@ -44,7 +48,7 @@ module.exports = function (RED) {
             }
             retryTimer = setTimeout(() => {
                 connectDevice();
-            }, 1000)
+            }, node.retryTimeout)
         }
         node.on('close', function () {
             // tidy up any state
@@ -114,7 +118,7 @@ module.exports = function (RED) {
                 setStatusOnError(e, "Can't find device");
                 if (shouldTryReconnect) {
                     node.log("Cannot find the device, re-trying...");
-                    findTimeout = setTimeout(findDevice, 1000);
+                    findTimeout = setTimeout(findDevice, node.findTimeout);
                 } else {
                     node.log("not retrying the find as shouldTryReconnect = false");
                 }

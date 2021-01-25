@@ -4,11 +4,6 @@ module.exports = function (RED) {
     function TuyaSmartDeviceSelfNode(config) {
         RED.nodes.createNode(this, config);
         let node = this;
-        let isConnected = false;
-        let shouldTryReconnect = true;
-        this.deviceName = config.deviceName;
-        this.deviceId = config.deviceId;
-        this.deviceKey = config.deviceKey;
         this.operations = []
         node.on('input', function (msg) {
             let operation = msg.payload.operation || 'SET';

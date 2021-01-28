@@ -11,6 +11,7 @@ module.exports = function (RED) {
         this.deviceIp = config.deviceIp;
         this.retryTimeout = (config.retryTimeout == null || isNaN(config.retryTimeout))? 1000 : config.retryTimeout;
         this.findTimeout = (config.findTimeout == null || isNaN(config.findTimeout))? 1000 : config.findTimeout;
+        this.tuyaVersion = (config.tuyaVersion == null || isNaN(config.tuyaVersion))? '3.1' : config.tuyaVersion;
         let findTimeout = null;
         this.deviceKey = config.deviceKey;
         node.on('input', function (msg) {
@@ -32,14 +33,16 @@ module.exports = function (RED) {
             node.error(e, "An error had occured ");
             return node.status({ fill: "red", shape: "ring", text: message });
         };
-
-        let tuyaDevice = new TuyaDevice({
+        const connectionParams = {
             id: node.deviceId,
             key: node.deviceKey,
             ip: node.deviceIp,
             issueGetOnConnect: false,
             nullPayloadOnJSONError: false,
-        });
+            version: node.tuyaVersion
+        };
+        node.log(`Connecting to Tuya with params ${JSON.stringify(connectionParams)}`);
+        let tuyaDevice = new TuyaDevice(connectionParams);
 
         let retryTimer = null;
         let retryConnection = () => {
@@ -125,7 +128,9 @@ module.exports = function (RED) {
 
             });
         }
-        findDevice();
+        setTimeout(()=>{
+            findDevice();
+        },1000)
 
     }
     RED.nodes.registerType("tuya-smart-device", TuyaSmartDeviceNode);

@@ -4,8 +4,16 @@
         color: '#C7E9C0',
         defaults: {
             deviceName: { value: "", required: true },
-            deviceId: { value: "", required: true },
+            deviceId: { value: "", required: false  , validate: function (v) {
+                return $("#node-input-deviceIp").val().trim().length == 0 ? v.trim().length > 0 : true;
+            } },
             deviceKey: { value: "", required: true },
+            deviceIp: { value: "", required: false , validate: function (v) {
+                return $("#node-input-deviceId").val().trim().length == 0 ? v.trim().length > 0 : true;
+            }},
+            retryTimeout: { value: 1000, required: true , validate:RED.validators.number()},
+            findTimeout: { value: 1000, required: true ,validate:RED.validators.number()},
+            tuyaVersion: { value: '3.1', required: false}
 
         },
         inputs: 1,
@@ -13,22 +21,62 @@
         icon: "bridge.svg",
         label: function () {
             return this.deviceName || "tuya smart device";
+        },
+        oneditprepare: function() {
+            $('#node-input-findTimeout').val(this.findTimeout || 1000);
+            $('#node-input-retryTimeout').val(this.findTimeout || 1000);
         }
     });
 </script>
 
 <script type="text/html" data-template-name="tuya-smart-device">
     <div class="form-row">
-        <label for="node-input-deviceName"><i class="fa fa-tag"></i> Device Name</label>
+        <label style="width:100%" for="node-input-deviceName"><i class="fa fa-tag"></i> Device Name</label>
         <input type="text" id="node-input-deviceName" placeholder="Bulb">
     </div>
-    <div class="form-row">
-        <label for="node-input-deviceId"><i class="fa fa-id-card-o"></i> Device Virtual ID</label>
-        <input type="text" id="node-input-deviceId" placeholder="">
+    
+
+
+    <hr/>
+    <div class="form-row" style="font-weight: bold;">
+        Connection Details
+       </div>
+    <div style="margin-bottom:10px;font-style: italic;color: brown;font-size: smaller;">
+        Use Device IP or Device Virtual ID (Don't use both)
     </div>
     <div class="form-row">
-        <label for="node-input-deviceKey"><i class="fa fa-key"></i> Device Key</label>
-        <input type="text" id="node-input-deviceKey" placeholder="">
+        <label style="width:100%" for="node-input-deviceId" ><i class="fa fa-id-card-o"></i> Device Virtual ID</label>
+        <input type="text" id="node-input-deviceId" placeholder="Device Virtual ID">
+    </div>
+    <div class="form-row">
+        <label style="width:100%" for="node-input-deviceIp"><i class="fa fa-info"></i> Device IP (Static)</label>
+        <input type="text" id="node-input-deviceIp" placeholder="The ip of the device">
+    </div>
+    <div class="form-row">
+        <label style="width:100%" for="node-input-deviceKey"><i class="fa fa-key"></i> Device Key</label>
+        <input type="text" id="node-input-deviceKey" placeholder="Device Key">
+    </div>
+
+    <div style="color:blue">
+        <i class="fa fa-question"></i>&nbsp;&nbsp;How to get the device ID and Key ?<a href="https://github.com/codetheweb/tuyapi/blob/master/docs/SETUP.md" target="_blank">Click here</a>
+    </div>
+    <hr />
+    <div class="form-row" style="font-weight: bold;">
+     Advanced Options
+    </div>
+    <div class="form-row">
+        <label style="width:100%" for="node-input-retryTimeout"><i class="fa fa-clock-o"></i> Interval for retry connection incase of error (milliseconds)</label>
+    </div>
+    <div class="form-row">
+        <input type="number" id="node-input-retryTimeout" placeholder="" value=1000>
+    </div>
+    <div class="form-row">
+        <label style="width:100%" for="node-input-findTimeout"><i class="fa fa-clock-o"></i> Interval for find operation incase of error (milliseconds)</label>
+        <input type="number" id="node-input-findTimeout" placeholder="" value=1000>
+    </div>
+    <div class="form-row">
+        <label style="width:100%" for="node-input-tuyaVersion"><i class="fa fa-lock"></i> Tuya Protocol Version,  Default : 3.1 (don't change if you are not sure)</label>
+        <input type="text" id="node-input-tuyaVersion" placeholder="" value='3.1'>
     </div>
 </script>
 

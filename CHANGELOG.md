@@ -1,11 +1,19 @@
 # Changelog
 
+## 3.0.0
+
+Fixes [#35](https://github.com/vinodsr/node-red-contrib-tuya-smart-device/issues/35)
+Fixes [#39](https://github.com/vinodsr/node-red-contrib-tuya-smart-device/issues/39)
+
+- Optimized code
+
 ## 2.0.0
 
 Fixes [#33](https://github.com/vinodsr/node-red-contrib-tuya-smart-device/issues/33)
 
 - Tuya api library updated to 6.1.1
 - No more null data payload on json undefined error. :) 
+
 
 ## 1.2.1
 

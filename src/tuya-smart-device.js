@@ -8,6 +8,10 @@ module.exports = function (RED) {
         let shouldTryReconnect = true;
         this.deviceName = config.deviceName;
         this.deviceId = config.deviceId;
+        this.deviceIp = config.deviceIp;
+        this.retryTimeout = (config.retryTimeout == null || isNaN(config.retryTimeout))? 1000 : config.retryTimeout;
+        this.findTimeout = (config.findTimeout == null || isNaN(config.findTimeout))? 1000 : config.findTimeout;
+        this.tuyaVersion = (config.tuyaVersion == null || isNaN(config.tuyaVersion))? '3.1' : config.tuyaVersion;
         let findTimeout = null;
         this.deviceKey = config.deviceKey;
         node.on('input', function (msg) {
@@ -29,13 +33,16 @@ module.exports = function (RED) {
             node.error(e, "An error had occured ");
             return node.status({ fill: "red", shape: "ring", text: message });
         };
-
-        let tuyaDevice = new TuyaDevice({
+        const connectionParams = {
             id: node.deviceId,
             key: node.deviceKey,
+            ip: node.deviceIp,
             issueGetOnConnect: false,
             nullPayloadOnJSONError: false,
-        });
+            version: node.tuyaVersion
+        };
+        node.log(`Connecting to Tuya with params ${JSON.stringify(connectionParams)}`);
+        let tuyaDevice = new TuyaDevice(connectionParams);
 
         let retryTimer = null;
         let retryConnection = () => {
@@ -44,7 +51,7 @@ module.exports = function (RED) {
             }
             retryTimer = setTimeout(() => {
                 connectDevice();
-            }, 1000)
+            }, node.retryTimeout)
         }
         node.on('close', function () {
             // tidy up any state
@@ -114,14 +121,16 @@ module.exports = function (RED) {
                 setStatusOnError(e, "Can't find device");
                 if (shouldTryReconnect) {
                     node.log("Cannot find the device, re-trying...");
-                    findTimeout = setTimeout(findDevice, 1000);
+                    findTimeout = setTimeout(findDevice, node.findTimeout);
                 } else {
                     node.log("not retrying the find as shouldTryReconnect = false");
                 }
 
             });
         }
-        findDevice();
+        setTimeout(()=>{
+            findDevice();
+        },1000)
 
     }
     RED.nodes.registerType("tuya-smart-device", TuyaSmartDeviceNode);

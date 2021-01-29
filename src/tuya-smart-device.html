@@ -5,11 +5,11 @@
         defaults: {
             deviceName: { value: "", required: true },
             deviceId: { value: "", required: false  , validate: function (v) {
-                return $("#node-input-deviceIp").val().trim().length == 0 ? v.trim().length > 0 : true;
+                return $("#node-input-deviceIp").val() && $("#node-input-deviceIp").val().trim().length == 0 ? v.trim().length > 0 : true;
             } },
             deviceKey: { value: "", required: true },
             deviceIp: { value: "", required: false , validate: function (v) {
-                return $("#node-input-deviceId").val().trim().length == 0 ? v.trim().length > 0 : true;
+                return $("#node-input-deviceId").val() && $("#node-input-deviceId").val().trim().length == 0 ? v.trim().length > 0 : true;
             }},
             retryTimeout: { value: 1000, required: true , validate:RED.validators.number()},
             findTimeout: { value: 1000, required: true ,validate:RED.validators.number()},
@@ -25,6 +25,9 @@
         oneditprepare: function() {
             $('#node-input-findTimeout').val(this.findTimeout || 1000);
             $('#node-input-retryTimeout').val(this.findTimeout || 1000);
+            if(this.tuyaVersion == null || typeof this.tuyaVersion == "undefined" || this.tuyaVersion.trim().length == 0){
+                $('#node-input-tuyaVersion').val(3.1);
+            }
         }
     });
 </script>

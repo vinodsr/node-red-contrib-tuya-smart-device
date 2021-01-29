@@ -12,13 +12,14 @@ module.exports = function (RED) {
             node.log(`[${requestID}] recieved data on input : ${JSON.stringify(msg)}`);
             // Initiate the device connection and then send the payload
             node.operations.push(1);
+            const tuyaProtocolVersion = (msg.payload.version == null || typeof  msg.payload.version  == "undefined" ||  msg.payload.version.trim() == "" || isNaN(msg.payload.version))? '3.1' : msg.payload.version.trim() ;
             const connectionParams = {
                 id: msg.payload.deviceVirtualId,
                 key: msg.payload.deviceKey,
                 ip: msg.payload.deviceIp,
                 issueGetOnConnect: false,
                 nullPayloadOnJSONError: false,
-                version: msg.payload.version
+                version: tuyaProtocolVersion
             };
             node.log(`Connecting to tuya with params : ${JSON.stringify(connectionParams)}`);
             let tuyaDevice = new TuyaDevice(connectionParams);

@@ -9,9 +9,9 @@ module.exports = function (RED) {
         this.deviceName = config.deviceName;
         this.deviceId = config.deviceId;
         this.deviceIp = config.deviceIp;
-        this.retryTimeout = (config.retryTimeout == null || isNaN(config.retryTimeout))? 1000 : config.retryTimeout;
-        this.findTimeout = (config.findTimeout == null || isNaN(config.findTimeout))? 1000 : config.findTimeout;
-        this.tuyaVersion = (config.tuyaVersion == null || isNaN(config.tuyaVersion))? '3.1' : config.tuyaVersion;
+        this.retryTimeout = (config.retryTimeout == null || typeof  config.retryTimeout == "undefined" || config.retryTimeout.trim() == ""|| isNaN(config.retryTimeout))? 1000 : config.retryTimeout;
+        this.findTimeout = (config.findTimeout == null || typeof  config.findTimeout == "undefined" || config.findTimeout.trim() == "" || isNaN(config.findTimeout))? 1000 : config.findTimeout;
+        this.tuyaVersion = (config.tuyaVersion == null || typeof  config.tuyaVersion == "undefined" ||  config.tuyaVersion.trim() == "" || isNaN(config.tuyaVersion))? '3.1' : config.tuyaVersion.trim();
         let findTimeout = null;
         this.deviceKey = config.deviceKey;
         node.on('input', function (msg) {
@@ -41,7 +41,7 @@ module.exports = function (RED) {
             nullPayloadOnJSONError: false,
             version: node.tuyaVersion
         };
-        node.log(`Connecting to Tuya with params ${JSON.stringify(connectionParams)}`);
+        node.log(`Connecting to Tuya with params ${JSON.stringify(connectionParams)} , findTimeout :  ${node.findTimeout} , retryTimeout:  ${node.retryTimeout} `);
         let tuyaDevice = new TuyaDevice(connectionParams);
 
         let retryTimer = null;

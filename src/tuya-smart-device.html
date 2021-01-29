@@ -31,40 +31,51 @@
 
 <script type="text/html" data-template-name="tuya-smart-device">
     <div class="form-row">
-        <label for="node-input-deviceName"><i class="fa fa-tag"></i> Device Name</label>
+        <label style="width:100%" for="node-input-deviceName"><i class="fa fa-tag"></i> Device Name</label>
         <input type="text" id="node-input-deviceName" placeholder="Bulb">
     </div>
     
-    <div class="form-row">
-        <label for="node-input-deviceKey"><i class="fa fa-key"></i> Device Key</label>
-        <input type="text" id="node-input-deviceKey" placeholder="Device Key">
-    </div>
+
 
     <hr/>
-    <div>
-        Use Device IP or Device Virtual ID
+    <div class="form-row" style="font-weight: bold;">
+        Connection Details
+       </div>
+    <div style="margin-bottom:10px;font-style: italic;color: brown;font-size: smaller;">
+        Use Device IP or Device Virtual ID (Don't use both)
     </div>
     <div class="form-row">
-        <label for="node-input-deviceId"><i class="fa fa-id-card-o"></i> Device Virtual ID</label>
+        <label style="width:100%" for="node-input-deviceId" ><i class="fa fa-id-card-o"></i> Device Virtual ID</label>
         <input type="text" id="node-input-deviceId" placeholder="Device Virtual ID">
     </div>
     <div class="form-row">
-        <label for="node-input-deviceIp"><i class="fa fa-id-card-o"></i> Device IP</label>
+        <label style="width:100%" for="node-input-deviceIp"><i class="fa fa-info"></i> Device IP (Static)</label>
         <input type="text" id="node-input-deviceIp" placeholder="The ip of the device">
     </div>
-
-
-    <hr />
     <div class="form-row">
-        <label for="node-input-retryTimeout"><i class="fa fa-key"></i> Interval for retry connection incase of error (milliseconds)</label>
+        <label style="width:100%" for="node-input-deviceKey"><i class="fa fa-key"></i> Device Key</label>
+        <input type="text" id="node-input-deviceKey" placeholder="Device Key">
+    </div>
+
+    <div style="color:blue">
+        <i class="fa fa-question"></i>&nbsp;&nbsp;How to get the device ID and Key ?<a href="https://github.com/codetheweb/tuyapi/blob/master/docs/SETUP.md" target="_blank">Click here</a>
+    </div>
+    <hr />
+    <div class="form-row" style="font-weight: bold;">
+     Advanced Options
+    </div>
+    <div class="form-row">
+        <label style="width:100%" for="node-input-retryTimeout"><i class="fa fa-clock-o"></i> Interval for retry connection incase of error (milliseconds)</label>
+    </div>
+    <div class="form-row">
         <input type="number" id="node-input-retryTimeout" placeholder="" value=1000>
     </div>
     <div class="form-row">
-        <label for="node-input-findTimeout"><i class="fa fa-key"></i> Interval for find operation incase of error (milliseconds)</label>
+        <label style="width:100%" for="node-input-findTimeout"><i class="fa fa-clock-o"></i> Interval for find operation incase of error (milliseconds)</label>
         <input type="number" id="node-input-findTimeout" placeholder="" value=1000>
     </div>
     <div class="form-row">
-        <label for="node-input-tuyaVersion"><i class="fa fa-key"></i> Tuya Protocol Version,  Default : 3.1 (don't change if you are not sure)</label>
+        <label style="width:100%" for="node-input-tuyaVersion"><i class="fa fa-lock"></i> Tuya Protocol Version,  Default : 3.1 (don't change if you are not sure)</label>
         <input type="text" id="node-input-tuyaVersion" placeholder="" value='3.1'>
     </div>
 </script>

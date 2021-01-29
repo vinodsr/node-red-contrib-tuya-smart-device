@@ -35,24 +35,30 @@
     <code>
         {
             "deviceVirtualId": "<virtualid>",
+            "deviceIp": "<deviceIP>",
             "deviceKey": "<devicekey>",
             "deviceName": "<name of the device>",
             "operation": "SET", // optional default : SET
             "payload": {
                 "dps": 1,
                 "set": true
-            }
+            },
+            "version": "<tuya protocol version>(Optional)"
         }
     </code>
-
+    Don't pass IP and Key same time.
     <h3>Input</h3>
     <h4>payload</h4>
     <dl class="message-properties">
-        <dt class="">dps <span class="property-type">deviceVirtualId</span></dt>
+        <dt class="">deviceVirtualId <span class="property-type">String</span></dt>
         <dd>Virtual ID of the device</dd>
-        <dt class="">dps <span class="property-type">deviceKey</span></dt>
+        <dt class="">deviceIp <span class="property-type">String</span></dt>
+        <dd>IP address of the device(use static IP)</dd>
+        <dt class="">deviceKey <span class="property-type">String</span></dt>
         <dd>The device key</dd>
-        <dt class="">dps <span class="property-type">deviceName</span></dt>
+        <dt class="">version (optional) <span class="property-type">Number</span></dt>
+        <dd>Tuya protocol version (default : 3.1)</dd>
+        <dt class="">deviceName <span class="property-type">String</span></dt>
         <dd>Name of the device for reference only. The output will have this name.</dd>
         <dt class="optional">operation
             <span class="property-type">SET/GET</span>
@@ -79,6 +85,8 @@
                 {
                     "deviceVirtualId": "<virtualid>",
                     "deviceKey": "<key of the device>",
+                    "deviceIp": "<deviceIP>",
+                    "version":"<tuya protocol version",
                     "deviceName": "<device name>",
                     "operation": "SET", // optional by default SET
                     "payload":{

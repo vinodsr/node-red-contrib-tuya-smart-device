@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.2
+
+- Fixes [#43](https://github.com/vinodsr/node-red-contrib-tuya-smart-device/issues/43)
+
 ## 3.0.1
 
 - Fixes protocol default value not set for existing nodes

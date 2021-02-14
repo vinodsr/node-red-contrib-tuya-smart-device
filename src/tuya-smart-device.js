@@ -9,10 +9,21 @@ module.exports = function (RED) {
         this.deviceName = config.deviceName;
         this.deviceId = config.deviceId;
         this.deviceIp = config.deviceIp;
-        this.retryTimeout = (config.retryTimeout == null || typeof  config.retryTimeout == "undefined" || config.retryTimeout.trim() == ""|| isNaN(config.retryTimeout))? 1000 : config.retryTimeout;
-        this.findTimeout = (config.findTimeout == null || typeof  config.findTimeout == "undefined" || config.findTimeout.trim() == "" || isNaN(config.findTimeout))? 1000 : config.findTimeout;
-        this.tuyaVersion = (config.tuyaVersion == null || typeof  config.tuyaVersion == "undefined" ||  config.tuyaVersion.trim() == "" || isNaN(config.tuyaVersion))? '3.1' : config.tuyaVersion.trim();
-        let findTimeout = null;
+        node.log(`Recieved the config ${JSON.stringify(config)}`);
+        this.retryTimeout = (config.retryTimeout == null || typeof config.retryTimeout == "undefined" || (typeof config.retryTimeout == "string" && config.retryTimeout.trim() == "") || (typeof config.retryTimeout == "number" && config.retryTimeout <= 0) || isNaN(config.retryTimeout)) ? 1000 : config.retryTimeout;
+        this.findTimeout = (config.findTimeout == null || typeof config.findTimeout == "undefined" || (typeof config.findTimeout == "string" && config.findTimeout.trim() == "") || (typeof config.findTimeout == "number" && config.findTimeout <= 0) || isNaN(config.findTimeout)) ? 1000 : config.findTimeout;
+        this.tuyaVersion = (config.tuyaVersion == null || typeof config.tuyaVersion == "undefined" || (typeof config.tuyaVersion == "string" && config.tuyaVersion.trim() == "") || (typeof config.tuyaVersion == "number" && config.tuyaVersion <= 0) || isNaN(config.tuyaVersion)) ? '3.1' : config.tuyaVersion.trim();
+
+        if (this.retryTimeout <= 0) {
+            this.retryTimeout = 1000;
+        }
+
+        if (this.findTimeout <= 0) {
+            this.findTimeout = 1000;
+        }
+        let findTimeoutHandler = null;
+        let retryTimerHandler = null;
+
         this.deviceKey = config.deviceKey;
         node.on('input', function (msg) {
             let operation = msg.payload.operation || 'SET';
@@ -44,12 +55,9 @@ module.exports = function (RED) {
         node.log(`Connecting to Tuya with params ${JSON.stringify(connectionParams)} , findTimeout :  ${node.findTimeout} , retryTimeout:  ${node.retryTimeout} `);
         let tuyaDevice = new TuyaDevice(connectionParams);
 
-        let retryTimer = null;
         let retryConnection = () => {
-            if (retryTimer !== null) {
-                clearTimeout(retryTimer);
-            }
-            retryTimer = setTimeout(() => {
+            clearTimeout(retryTimerHandler);
+            retryTimerHandler = setTimeout(() => {
                 connectDevice();
             }, node.retryTimeout)
         }
@@ -59,9 +67,9 @@ module.exports = function (RED) {
             node.log("Cleaning up the state");
             shouldTryReconnect = false;
             tuyaDevice.disconnect();
-            if (findTimeout) {
-                clearTimeout(findTimeout);
-            }
+            node.log("Clearing the find timeout handler");
+            clearTimeout(findTimeoutHandler);
+
         });
 
 
@@ -99,9 +107,7 @@ module.exports = function (RED) {
             });
         });
         let connectDevice = () => {
-            if (findTimeout) {
-                clearTimeout(findTimeout);
-            }
+            clearTimeout(findTimeoutHandler);
             if (tuyaDevice.isConnected() === false) {
                 setStatusConnecting();
                 tuyaDevice.connect();
@@ -121,16 +127,16 @@ module.exports = function (RED) {
                 setStatusOnError(e, "Can't find device");
                 if (shouldTryReconnect) {
                     node.log("Cannot find the device, re-trying...");
-                    findTimeout = setTimeout(findDevice, node.findTimeout);
+                    findTimeoutHandler = setTimeout(findDevice, node.findTimeout);
                 } else {
                     node.log("not retrying the find as shouldTryReconnect = false");
                 }
 
             });
         }
-        setTimeout(()=>{
+        findTimeoutHandler = setTimeout(() => {
             findDevice();
-        },1000)
+        }, 1000)
 
     }
     RED.nodes.registerType("tuya-smart-device", TuyaSmartDeviceNode);

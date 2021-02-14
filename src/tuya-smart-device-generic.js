@@ -12,7 +12,7 @@ module.exports = function (RED) {
             node.log(`[${requestID}] recieved data on input : ${JSON.stringify(msg)}`);
             // Initiate the device connection and then send the payload
             node.operations.push(1);
-            const tuyaProtocolVersion = (msg.payload.version == null || typeof  msg.payload.version  == "undefined" ||  msg.payload.version.trim() == "" || isNaN(msg.payload.version))? '3.1' : msg.payload.version.trim() ;
+            const tuyaProtocolVersion = (msg.payload.version == null || typeof msg.payload.version == "undefined" || msg.payload.version.trim() == "" || isNaN(msg.payload.version)) ? '3.1' : msg.payload.version.trim();
             const connectionParams = {
                 id: msg.payload.deviceVirtualId,
                 key: msg.payload.deviceKey,
@@ -48,9 +48,6 @@ module.exports = function (RED) {
                     default:
                         node.log(`[${requestID}] Invalid operation ${operation}`);
                 }
-                setTimeout(() => {
-
-                }, 2000)
             });
             tuyaDevice.on('data', data => {
                 node.log(`[${requestID}] Data from device: ${JSON.stringify(data)}`);
@@ -73,7 +70,7 @@ module.exports = function (RED) {
                 }).catch((e) => {
                     // We need to retry 
                     setStatusOnError(e, requestID, "Can't find device");
-                    node.log(`[${requestID}] Cannot find the device, re-trying...`);
+                    node.log(`[${requestID}] Cannot find the device`);
                     //setTimeout(findDevice, 1000);
                 });
             }

@@ -4,6 +4,7 @@ module.exports = function (RED) {
     function TuyaSmartDeviceSelfNode(config) {
         RED.nodes.createNode(this, config);
         let node = this;
+        this.name = config.name;
         this.operations = []
         node.on('input', function (msg) {
             let operation = msg.payload.operation || 'SET';
@@ -35,7 +36,15 @@ module.exports = function (RED) {
 
             tuyaDevice.on('error', error => {
                 node.operations.pop();
-                setStatusOnError(error, requestID);
+                setStatusOnError(error, requestID, 'Error', {
+                    context: {
+                        message: error,
+                        deviceVirtualId: msg.payload.deviceVirtualId,
+                        deviceKey: msg.payload.deviceKey,
+                        deviceIp: msg.payload.deviceIp,
+                        requestID: requestID
+                    }
+                });
             });
             tuyaDevice.on('connected', () => {
                 node.log(`[${requestID}]  Connected to device! ${msg.payload.deviceVirtualId}`);
@@ -58,6 +67,8 @@ module.exports = function (RED) {
                         deviceVirtualId: msg.payload.deviceVirtualId,
                         deviceKey: msg.payload.deviceKey,
                         deviceName: msg.payload.deviceName,
+                        deviceIp: msg.payload.deviceIp,
+                        requestID: requestID
                     }
                 });
             });
@@ -69,7 +80,14 @@ module.exports = function (RED) {
                     tuyaDevice.connect();
                 }).catch((e) => {
                     // We need to retry 
-                    setStatusOnError(e, requestID, "Can't find device");
+                    setStatusOnError(e.message, requestID, "Can't find device", {
+                        context: {
+                            message: e,
+                            deviceVirtualId: msg.payload.deviceVirtualId,
+                            deviceKey: msg.payload.deviceKey,
+                            deviceIp: msg.payload.deviceIp,
+                        }
+                    });
                     node.log(`[${requestID}] Cannot find the device`);
                     //setTimeout(findDevice, 1000);
                 });
@@ -80,9 +98,9 @@ module.exports = function (RED) {
         let setStatusConnecting = function () { return node.status({ fill: "yellow", shape: "ring", text: "connecting" }); };
         let setStatusConnected = function () { return node.status({ fill: "green", shape: "ring", text: "connected" }); };
         let setStatusDisconnected = function () { return node.status({ fill: "red", shape: "ring", text: "disconnected" }); };
-        var setStatusOnError = function (e, requestID, message = "error") {
-            node.error(`[${requestID}] An error had occured ${e} ${JSON.stringify(e)}`);
-            return node.status({ fill: "red", shape: "ring", text: message });
+        var setStatusOnError = function (errorText, requestID, errorShortText = "error", data) {
+            node.error(`[${requestID}] An error had occured : ${errorText}`, data);
+            return node.status({ fill: "red", shape: "ring", text: errorShortText });
         };
 
         node.on('close', function () {

@@ -6,6 +6,7 @@ module.exports = function (RED) {
         let node = this;
         let isConnected = false;
         let shouldTryReconnect = true;
+        this.name = config.deviceName;
         this.deviceName = config.deviceName;
         this.deviceId = config.deviceId;
         this.deviceIp = config.deviceIp;
@@ -40,9 +41,9 @@ module.exports = function (RED) {
         let setStatusConnecting = function () { return node.status({ fill: "yellow", shape: "ring", text: "connecting" }); };
         let setStatusConnected = function () { return node.status({ fill: "green", shape: "ring", text: "connected" }); };
         let setStatusDisconnected = function () { return node.status({ fill: "red", shape: "ring", text: "disconnected" }); };
-        var setStatusOnError = function (e, message = "error") {
-            node.error(e, "An error had occured ");
-            return node.status({ fill: "red", shape: "ring", text: message });
+        var setStatusOnError = function (errorText, errorShortText = "error", data) {
+            node.error(errorText, data);
+            return node.status({ fill: "red", shape: "ring", text: errorShortText });
         };
         const connectionParams = {
             id: node.deviceId,
@@ -89,7 +90,14 @@ module.exports = function (RED) {
         });
 
         tuyaDevice.on('error', error => {
-            setStatusOnError(error);
+            setStatusOnError(error, 'Error', {
+                context: {
+                    message: error,
+                    deviceVirtualId: node.deviceId,
+                    deviceIp: node.deviceIp,
+                    deviceKey: node.deviceKey
+                }
+            });
             if (shouldTryReconnect) {
                 retryConnection();
             }
@@ -124,7 +132,14 @@ module.exports = function (RED) {
                 connectDevice();
             }).catch((e) => {
                 // We need to retry 
-                setStatusOnError(e, "Can't find device");
+                setStatusOnError(e.message, "Can't find device", {
+                    context: {
+                        message: e,
+                        deviceVirtualId: node.deviceId,
+                        deviceIp: node.deviceIp,
+                        deviceKey: node.deviceKey
+                    }
+                });
                 if (shouldTryReconnect) {
                     node.log("Cannot find the device, re-trying...");
                     findTimeoutHandler = setTimeout(findDevice, node.findTimeout);

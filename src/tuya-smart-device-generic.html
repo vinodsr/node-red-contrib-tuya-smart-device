@@ -3,13 +3,13 @@
         category: 'smarthome',
         color: '#C7E9C0',
         defaults: {
-
+            name: { value: "", required: false },
         },
         inputs: 1,
         outputs: 1,
         icon: "bridge.svg",
         label: function () {
-            return this.deviceName || "tuya smart device generic";
+            return this.name || "tuya smart device generic";
         }
     });
 </script>
@@ -17,6 +17,11 @@
 <script type="text/html" data-template-name="tuya-smart-device-generic">
     <div>
        Pass the device key and virual id as payload paramters. Refer help for more details.
+       <hr/>
+       <div class="form-row">
+        <label style="width:100%" for="node-input-name" ><i class="fa fa-id-card-o"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
     </div>
 </script>
 

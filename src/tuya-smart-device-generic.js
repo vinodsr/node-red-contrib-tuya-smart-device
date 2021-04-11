@@ -58,7 +58,7 @@ module.exports = function (RED) {
                         node.log(`[${requestID}] Invalid operation ${operation}`);
                 }
             });
-            tuyaDevice.on('data', data => {
+            tuyaDevice.on('dp-refresh', data => {
                 node.log(`[${requestID}] Data from device: ${JSON.stringify(data)}`);
                 tuyaDevice.disconnect();
                 node.send({

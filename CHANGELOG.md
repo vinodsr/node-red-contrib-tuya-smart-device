@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.0.1
+
+- Renamed data event to dp-refresh (Tuya 7.1 changes)
+
 ## 4.0.0
 - Update to Tuya 7.1.0. Closes [#51](https://github.com/vinodsr/node-red-contrib-tuya-smart-device/issues/51)
 

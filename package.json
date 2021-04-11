@@ -19,6 +19,6 @@
     }
   },
   "dependencies": {
-    "tuyapi": "6.1.1"
+    "tuyapi": "7.1.0"
   }
 }

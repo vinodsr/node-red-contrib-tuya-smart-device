@@ -103,7 +103,7 @@ module.exports = function (RED) {
             }
         });
 
-        tuyaDevice.on('data', data => {
+        tuyaDevice.on('dp-refresh', data => {
             node.log(`Data from device: ${JSON.stringify(data)}`);
             setStatusConnected();
             node.send({

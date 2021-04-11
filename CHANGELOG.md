@@ -1,5 +1,8 @@
 # Changelog
 
+## 4.0.0
+- Update to Tuya 7.1.0. Closes [#51](https://github.com/vinodsr/node-red-contrib-tuya-smart-device/issues/51)
+
 ## 3.1.0
 
 - Added support for catch node. If there a catch node in the flow, the tuya smart device node will not throw any error to the debug window. Implementing [#47](https://github.com/vinodsr/node-red-contrib-tuya-smart-device/issues/47)

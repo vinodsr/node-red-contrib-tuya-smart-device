@@ -17,8 +17,8 @@
             },
             retryTimeout: { value: 1000, required: true, validate: RED.validators.number() },
             findTimeout: { value: 1000, required: true, validate: RED.validators.number() },
-            tuyaVersion: { value: '3.1', required: false }
-
+            tuyaVersion: { value: '3.1', required: false },
+            eventMode: { value: 'event-both', required: true }
         },
         inputs: 1,
         outputs: 1,
@@ -27,6 +27,8 @@
             return this.deviceName || "tuya smart device";
         },
         oneditprepare: function () {
+            let eventMode = this.eventMode || 'event-both'
+            $("select[name='node-input-eventMode']").find(`option[value='${eventMode}']`).attr("selected", true);
             $('#node-input-findTimeout').val(this.findTimeout || 1000);
             $('#node-input-retryTimeout').val(this.retryTimeout || 1000);
             if (this.tuyaVersion == null || typeof this.tuyaVersion == "undefined" || this.tuyaVersion.trim().length == 0) {
@@ -85,6 +87,16 @@
         <label style="width:100%" for="node-input-tuyaVersion"><i class="fa fa-lock"></i> Tuya Protocol Version,  Default : 3.1 (don't change if you are not sure)</label>
         <input type="text" id="node-input-tuyaVersion" placeholder="" value='3.1'>
     </div>
+    <div class="form-row">
+        <label style="width:100%" for="node-input-subscribeMode"><i class="fa fa-wrench"></i> Listen to tuya events</label>
+    </div>
+    <div class="form-row">
+        <select name="node-input-eventMode" id="node-input-eventMode">
+            <option value="event-data">Data Event</option>
+            <option value="event-dp-refresh">DP-Refresh Event</option>
+            <option value="event-both">Both Events</option>
+        </select>
+    </div>
 </script>
 
 <script type="text/html" data-help-name="tuya-smart-device">
@@ -111,6 +123,9 @@
             <a href="https://codetheweb.github.io/tuyapi/index.html#tuyadeviceset">SET documentation</a> </p>
             <p>GET: Use GET the run a get operation in the device
             <a href="https://codetheweb.github.io/tuyapi/index.html#tuyadeviceget">GET documentation</a></p>
+            <p>REFRESH: Use REFRESH to refresh a device status
+            <a href="https://codetheweb.github.io/tuyapi/index.html#tuyadevicerefresh">REFRESH documentation</a> </p>
+
             Any output of the operation will be triggered on the output of the node.
         </dd>
         <dt class="">dps <span class="property-type">Number</span></dt>
@@ -118,7 +133,7 @@
         <dt class="">set <span class="property-type">Any</span></dt>
         <dd>The value you want to set for the dps index</dd>
         <dt class="optional">multiple <span class="property-type">Boolean</span></dt>
-        <dd>Incase you want to send multiple dps index. Use the data argument in that case.</dd>
+        <dd>Incase you want to send multiple dps index for a SET operation. Use the data argument in that case.</dd>
         <dt class="optional">data <span class="property-type">Object</span></dt>
         <dd>Object of the below format with multiple dps index and the values
             <code>

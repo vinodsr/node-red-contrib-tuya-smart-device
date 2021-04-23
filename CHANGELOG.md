@@ -1,5 +1,8 @@
 # Changelog
 
+## 4.0.2
+
+- Added support for both data and dp-refresh event [#54](https://github.com/vinodsr/node-red-contrib-tuya-smart-device/issues/54)
 ## 4.0.1
 
 - Renamed data event to dp-refresh (Tuya 7.1 changes)

@@ -6,15 +6,29 @@ module.exports = function (RED) {
         let node = this;
         let isConnected = false;
         let shouldTryReconnect = true;
+        let shouldSubscribeData = true;
+        let shouldSubscribeRefreshData = true;
         this.name = config.deviceName;
         this.deviceName = config.deviceName;
         this.deviceId = config.deviceId;
         this.deviceIp = config.deviceIp;
+        this.eventMode = config.eventMode || 'event-both'
         node.log(`Recieved the config ${JSON.stringify(config)}`);
         this.retryTimeout = (config.retryTimeout == null || typeof config.retryTimeout == "undefined" || (typeof config.retryTimeout == "string" && config.retryTimeout.trim() == "") || (typeof config.retryTimeout == "number" && config.retryTimeout <= 0) || isNaN(config.retryTimeout)) ? 1000 : config.retryTimeout;
         this.findTimeout = (config.findTimeout == null || typeof config.findTimeout == "undefined" || (typeof config.findTimeout == "string" && config.findTimeout.trim() == "") || (typeof config.findTimeout == "number" && config.findTimeout <= 0) || isNaN(config.findTimeout)) ? 1000 : config.findTimeout;
         this.tuyaVersion = (config.tuyaVersion == null || typeof config.tuyaVersion == "undefined" || (typeof config.tuyaVersion == "string" && config.tuyaVersion.trim() == "") || (typeof config.tuyaVersion == "number" && config.tuyaVersion <= 0) || isNaN(config.tuyaVersion)) ? '3.1' : config.tuyaVersion.trim();
 
+        if (this.eventMode == 'event-data') {
+            shouldSubscribeData = true;
+            shouldSubscribeRefreshData = false;
+        } else if (this.eventMode == 'event-dp-refresh') {
+            shouldSubscribeData = false;
+            shouldSubscribeRefreshData = true;
+        } else { // both case or default case
+            shouldSubscribeData = true;
+            shouldSubscribeRefreshData = true;
+        }
+        node.log(`Event subscription : shouldSubscribeData=>${shouldSubscribeData} , shouldSubscribeRefreshData=>${shouldSubscribeRefreshData}`);
         if (this.retryTimeout <= 0) {
             this.retryTimeout = 1000;
         }
@@ -32,6 +46,9 @@ module.exports = function (RED) {
             switch (operation) {
                 case "SET":
                     tuyaDevice.set(msg.payload);
+                    break;
+                case "REFRESH":
+                    tuyaDevice.refresh(msg.payload);
                     break;
                 case "GET":
                     tuyaDevice.get(msg.payload);
@@ -103,17 +120,33 @@ module.exports = function (RED) {
             }
         });
 
-        tuyaDevice.on('dp-refresh', data => {
-            node.log(`Data from device: ${JSON.stringify(data)}`);
-            setStatusConnected();
-            node.send({
-                payload: {
-                    data: data,
-                    deviceId: node.deviceId,
-                    deviceName: node.deviceName
-                }
+        if (shouldSubscribeRefreshData) {
+            tuyaDevice.on('dp-refresh', data => {
+                node.log(`Data from device  [event:dp-refresh]: ${JSON.stringify(data)}`);
+                setStatusConnected();
+                node.send({
+                    payload: {
+                        data: data,
+                        deviceId: node.deviceId,
+                        deviceName: node.deviceName
+                    }
+                });
             });
-        });
+        }
+
+        if (shouldSubscribeData) {
+            tuyaDevice.on('data', data => {
+                node.log(`Data from device  [event:data]: ${JSON.stringify(data)}`);
+                setStatusConnected();
+                node.send({
+                    payload: {
+                        data: data,
+                        deviceId: node.deviceId,
+                        deviceName: node.deviceName
+                    }
+                });
+            });
+        }
         let connectDevice = () => {
             clearTimeout(findTimeoutHandler);
             if (tuyaDevice.isConnected() === false) {

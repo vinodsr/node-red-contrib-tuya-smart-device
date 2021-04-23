@@ -4,8 +4,21 @@ module.exports = function (RED) {
     function TuyaSmartDeviceSelfNode(config) {
         RED.nodes.createNode(this, config);
         let node = this;
+        let shouldSubscribeData = true;
+        let shouldSubscribeRefreshData = true;
         this.name = config.name;
-        this.operations = []
+        this.eventMode = config.eventMode || 'event-both'
+        this.operations = [];
+        if (this.eventMode == 'event-data') {
+            shouldSubscribeData = true;
+            shouldSubscribeRefreshData = false;
+        } else if (this.eventMode == 'event-dp-refresh') {
+            shouldSubscribeData = false;
+            shouldSubscribeRefreshData = true;
+        } else { // both case or default case
+            shouldSubscribeData = true;
+            shouldSubscribeRefreshData = true;
+        }
         node.on('input', function (msg) {
             let operation = msg.payload.operation || 'SET';
             delete msg.payload.operation;
@@ -58,20 +71,40 @@ module.exports = function (RED) {
                         node.log(`[${requestID}] Invalid operation ${operation}`);
                 }
             });
-            tuyaDevice.on('dp-refresh', data => {
-                node.log(`[${requestID}] Data from device: ${JSON.stringify(data)}`);
-                tuyaDevice.disconnect();
-                node.send({
-                    payload: {
-                        data: data,
-                        deviceVirtualId: msg.payload.deviceVirtualId,
-                        deviceKey: msg.payload.deviceKey,
-                        deviceName: msg.payload.deviceName,
-                        deviceIp: msg.payload.deviceIp,
-                        requestID: requestID
-                    }
+
+            if (shouldSubscribeRefreshData) {
+                tuyaDevice.on('dp-refresh', data => {
+                    node.log(`[${requestID}] Data from device [event:dp-refresh]: ${JSON.stringify(data)}`);
+                    tuyaDevice.disconnect();
+                    node.send({
+                        payload: {
+                            data: data,
+                            deviceVirtualId: msg.payload.deviceVirtualId,
+                            deviceKey: msg.payload.deviceKey,
+                            deviceName: msg.payload.deviceName,
+                            deviceIp: msg.payload.deviceIp,
+                            requestID: requestID
+                        }
+                    });
                 });
-            });
+            }
+
+            if (shouldSubscribeData) {
+                tuyaDevice.on('data', data => {
+                    node.log(`[${requestID}] Data from device [event:data]: ${JSON.stringify(data)}`);
+                    tuyaDevice.disconnect();
+                    node.send({
+                        payload: {
+                            data: data,
+                            deviceVirtualId: msg.payload.deviceVirtualId,
+                            deviceKey: msg.payload.deviceKey,
+                            deviceName: msg.payload.deviceName,
+                            deviceIp: msg.payload.deviceIp,
+                            requestID: requestID
+                        }
+                    });
+                });
+            }
             let findDevice = () => {
                 setStatusConnecting();
                 node.log(`[${requestID}] initiating the find command`);

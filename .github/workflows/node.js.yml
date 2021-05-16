@@ -8,6 +8,10 @@ on:
     branches: [ master ]
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: ls
   publish:
     if: ${{ contains(github.event.head_commit.message, '#publish') }}
     runs-on: ubuntu-latest

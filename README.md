@@ -23,6 +23,8 @@ Instructions for getting the device id is available [here](https://github.com/co
 
 You will get the device id and the key once you run the wizard program as per the instructiions
 
+Get more details about latest version changes in the [CHANGELOG.md](./changelog.md)
+
 # Setup
 
 [(Back to top)](#table-of-contents)

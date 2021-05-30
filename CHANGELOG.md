@@ -1,13 +1,22 @@
 # Changelog
 
+## 4.1.0
+
+- Added CONTROL commands as input (CONNECT, DISCONNECT, RECONNECT)
+- Seperate output node for device status and client status
+- Dynamically set the find and retry timeout (Not saved permanently in the config)
+- Disable auto connect on start
+
 ## 4.0.2
 
 - Added support for both data and dp-refresh event [#54](https://github.com/vinodsr/node-red-contrib-tuya-smart-device/issues/54)
+
 ## 4.0.1
 
 - Renamed data event to dp-refresh (Tuya 7.1 changes)
 
 ## 4.0.0
+
 - Update to Tuya 7.1.0. Closes [#51](https://github.com/vinodsr/node-red-contrib-tuya-smart-device/issues/51)
 
 ## 3.1.0
@@ -34,23 +43,24 @@ Fixes [#39](https://github.com/vinodsr/node-red-contrib-tuya-smart-device/issues
 Fixes [#33](https://github.com/vinodsr/node-red-contrib-tuya-smart-device/issues/33)
 
 - Tuya api library updated to 6.1.1
-- No more null data payload on json undefined error. :) 
-
+- No more null data payload on json undefined error. :)
 
 ## 1.2.1
 
 Fixes [#25](https://github.com/vinodsr/node-red-contrib-tuya-smart-device/issues/25)
 
 ## 1.2.0
-* Added a generic SET node which can be controller with message.payload. One node to set command for many devices. Thanks to formatBCE for the suggestion.
+
+- Added a generic SET node which can be controller with message.payload. One node to set command for many devices. Thanks to formatBCE for the suggestion.
 
 ## 1.1.4
-* Bug fixes
+
+- Bug fixes
 
 ## 1.1.3
 
-* Added more extensive retry logic. Previously on find error, the logic hangs
+- Added more extensive retry logic. Previously on find error, the logic hangs
 
 ## 1.1.0
 
-* Initial Version
+- Initial Version

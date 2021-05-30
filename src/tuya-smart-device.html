@@ -1,176 +1,328 @@
 <script type="text/javascript">
-    RED.nodes.registerType('tuya-smart-device', {
-        category: 'smarthome',
-        color: '#C7E9C0',
-        defaults: {
-            deviceName: { value: "", required: true },
-            deviceId: {
-                value: "", required: false, validate: function (v) {
-                    return $("#node-input-deviceIp").val() && $("#node-input-deviceIp").val().trim().length == 0 ? v.trim().length > 0 : true;
-                }
-            },
-            deviceKey: { value: "", required: true },
-            deviceIp: {
-                value: "", required: false, validate: function (v) {
-                    return $("#node-input-deviceId").val() && $("#node-input-deviceId").val().trim().length == 0 ? v.trim().length > 0 : true;
-                }
-            },
-            retryTimeout: { value: 1000, required: true, validate: RED.validators.number() },
-            findTimeout: { value: 1000, required: true, validate: RED.validators.number() },
-            tuyaVersion: { value: '3.1', required: false },
-            eventMode: { value: 'event-both', required: true }
+  RED.nodes.registerType("tuya-smart-device", {
+    category: "smarthome",
+    color: "#C7E9C0",
+    defaults: {
+      deviceName: { value: "", required: true },
+      disableAutoStart: { value: false, required: true },
+      deviceId: {
+        value: "",
+        required: false,
+        validate: function (v) {
+          return $("#node-input-deviceIp").val() &&
+            $("#node-input-deviceIp").val().trim().length == 0
+            ? v.trim().length > 0
+            : true;
         },
-        inputs: 1,
-        outputs: 1,
-        icon: "bridge.svg",
-        label: function () {
-            return this.deviceName || "tuya smart device";
+      },
+      deviceKey: { value: "", required: true },
+      deviceIp: {
+        value: "",
+        required: false,
+        validate: function (v) {
+          return $("#node-input-deviceId").val() &&
+            $("#node-input-deviceId").val().trim().length == 0
+            ? v.trim().length > 0
+            : true;
         },
-        oneditprepare: function () {
-            let eventMode = this.eventMode || 'event-both'
-            $("select[name='node-input-eventMode']").find(`option[value='${eventMode}']`).attr("selected", true);
-            $('#node-input-findTimeout').val(this.findTimeout || 1000);
-            $('#node-input-retryTimeout').val(this.retryTimeout || 1000);
-            if (this.tuyaVersion == null || typeof this.tuyaVersion == "undefined" || this.tuyaVersion.trim().length == 0) {
-                $('#node-input-tuyaVersion').val(3.1);
-            }
-        }
-    });
+      },
+      retryTimeout: {
+        value: 1000,
+        required: true,
+        validate: RED.validators.number(),
+      },
+      findTimeout: {
+        value: 1000,
+        required: true,
+        validate: RED.validators.number(),
+      },
+      tuyaVersion: { value: "3.1", required: false },
+      eventMode: { value: "event-both", required: true },
+    },
+    inputs: 1,
+    outputs: 2,
+    inputLabels: "Command for the device",
+    outputLabels: ["Data from the device", "Client State"],
+    icon: "bridge.svg",
+    label: function () {
+      return this.deviceName || "tuya smart device";
+    },
+    oneditprepare: function () {
+      let eventMode = this.eventMode || "event-both";
+      $("select[name='node-input-eventMode']")
+        .find(`option[value='${eventMode}']`)
+        .attr("selected", true);
+      $("#node-input-findTimeout").val(this.findTimeout || 1000);
+      $("#node-input-retryTimeout").val(this.retryTimeout || 1000);
+      if (
+        this.tuyaVersion == null ||
+        typeof this.tuyaVersion == "undefined" ||
+        this.tuyaVersion.trim().length == 0
+      ) {
+        $("#node-input-tuyaVersion").val(3.1);
+      }
+    },
+  });
 </script>
 
 <script type="text/html" data-template-name="tuya-smart-device">
-    <div class="form-row">
-        <label style="width:100%" for="node-input-deviceName"><i class="fa fa-tag"></i> Device Name</label>
-        <input type="text" id="node-input-deviceName" placeholder="Bulb">
-    </div>
-    
+  <div class="form-row">
+    <label style="width:100%" for="node-input-deviceName"
+      ><i class="fa fa-tag"></i> Device Name</label
+    >
+    <input type="text" id="node-input-deviceName" placeholder="Bulb" />
+  </div>
 
+  <hr />
+  <div class="form-row" style="font-weight: bold;">Connection Details</div>
+  <div
+    style="margin-bottom:10px;font-style: italic;color: brown;font-size: smaller;"
+  >
+    Use Device IP or Device Virtual ID (Don't use both)
+  </div>
+  <div class="form-row">
+    <label style="width:100%" for="node-input-deviceId"
+      ><i class="fa fa-id-card-o"></i> Device Virtual ID</label
+    >
+    <input
+      type="text"
+      id="node-input-deviceId"
+      placeholder="Device Virtual ID"
+    />
+  </div>
+  <div class="form-row">
+    <label style="width:100%" for="node-input-deviceIp"
+      ><i class="fa fa-info"></i> Device IP (Static)</label
+    >
+    <input
+      type="text"
+      id="node-input-deviceIp"
+      placeholder="The ip of the device"
+    />
+  </div>
+  <div class="form-row">
+    <label style="width:100%" for="node-input-deviceKey"
+      ><i class="fa fa-key"></i> Device Key</label
+    >
+    <input type="text" id="node-input-deviceKey" placeholder="Device Key" />
+  </div>
 
-    <hr/>
-    <div class="form-row" style="font-weight: bold;">
-        Connection Details
-       </div>
-    <div style="margin-bottom:10px;font-style: italic;color: brown;font-size: smaller;">
-        Use Device IP or Device Virtual ID (Don't use both)
-    </div>
-    <div class="form-row">
-        <label style="width:100%" for="node-input-deviceId" ><i class="fa fa-id-card-o"></i> Device Virtual ID</label>
-        <input type="text" id="node-input-deviceId" placeholder="Device Virtual ID">
-    </div>
-    <div class="form-row">
-        <label style="width:100%" for="node-input-deviceIp"><i class="fa fa-info"></i> Device IP (Static)</label>
-        <input type="text" id="node-input-deviceIp" placeholder="The ip of the device">
-    </div>
-    <div class="form-row">
-        <label style="width:100%" for="node-input-deviceKey"><i class="fa fa-key"></i> Device Key</label>
-        <input type="text" id="node-input-deviceKey" placeholder="Device Key">
-    </div>
-
-    <div style="color:blue">
-        <i class="fa fa-question"></i>&nbsp;&nbsp;How to get the device ID and Key ?<a href="https://github.com/codetheweb/tuyapi/blob/master/docs/SETUP.md" target="_blank">Click here</a>
-    </div>
-    <hr />
-    <div class="form-row" style="font-weight: bold;">
-     Advanced Options
-    </div>
-    <div class="form-row">
-        <label style="width:100%" for="node-input-retryTimeout"><i class="fa fa-clock-o"></i> Interval for retry connection incase of error (milliseconds)</label>
-    </div>
-    <div class="form-row">
-        <input type="number" id="node-input-retryTimeout" placeholder="" value=1000>
-    </div>
-    <div class="form-row">
-        <label style="width:100%" for="node-input-findTimeout"><i class="fa fa-clock-o"></i> Interval for find operation incase of error (milliseconds)</label>
-        <input type="number" id="node-input-findTimeout" placeholder="" value=1000>
-    </div>
-    <div class="form-row">
-        <label style="width:100%" for="node-input-tuyaVersion"><i class="fa fa-lock"></i> Tuya Protocol Version,  Default : 3.1 (don't change if you are not sure)</label>
-        <input type="text" id="node-input-tuyaVersion" placeholder="" value='3.1'>
-    </div>
-    <div class="form-row">
-        <label style="width:100%" for="node-input-subscribeMode"><i class="fa fa-wrench"></i> Listen to tuya events</label>
-    </div>
-    <div class="form-row">
-        <select name="node-input-eventMode" id="node-input-eventMode">
-            <option value="event-data">Data Event</option>
-            <option value="event-dp-refresh">DP-Refresh Event</option>
-            <option value="event-both">Both Events</option>
-        </select>
-    </div>
+  <div style="color:blue">
+    <i class="fa fa-question"></i>&nbsp;&nbsp;How to get the device ID and Key
+    ?<a
+      href="https://github.com/codetheweb/tuyapi/blob/master/docs/SETUP.md"
+      target="_blank"
+      >Click here</a
+    >
+  </div>
+  <hr />
+  <div class="form-row" style="font-weight: bold;">Advanced Options</div>
+  <div class="form-row">
+    <input
+      type="checkbox"
+      id="node-input-disableAutoStart"
+      placeholder=""
+      style="width:auto"
+    />
+    <label for="node-input-disableAutoStart" style="width:auto">
+      Disable auto connect on start
+    </label>
+    <br />
+    (You have to manuually issue the CONNECT CONTROL COMMAND)
+    <br />
+  </div>
+  <div class="form-row">
+    <label style="width:100%" for="node-input-retryTimeout"
+      ><i class="fa fa-clock-o"></i> Interval for retry connection incase of
+      error (milliseconds)</label
+    >
+  </div>
+  <div class="form-row">
+    <input
+      type="number"
+      id="node-input-retryTimeout"
+      placeholder=""
+      value="1000"
+    />
+  </div>
+  <div class="form-row">
+    <label style="width:100%" for="node-input-findTimeout"
+      ><i class="fa fa-clock-o"></i> Interval for find operation incase of error
+      (milliseconds)</label
+    >
+    <input
+      type="number"
+      id="node-input-findTimeout"
+      placeholder=""
+      value="1000"
+    />
+  </div>
+  <div class="form-row">
+    <label style="width:100%" for="node-input-tuyaVersion"
+      ><i class="fa fa-lock"></i> Tuya Protocol Version, Default : 3.1 (don't
+      change if you are not sure)</label
+    >
+    <input type="text" id="node-input-tuyaVersion" placeholder="" value="3.1" />
+  </div>
+  <div class="form-row">
+    <label style="width:100%" for="node-input-subscribeMode"
+      ><i class="fa fa-wrench"></i> Listen to tuya events</label
+    >
+  </div>
+  <div class="form-row">
+    <select name="node-input-eventMode" id="node-input-eventMode">
+      <option value="event-data">Data Event</option>
+      <option value="event-dp-refresh">DP-Refresh Event</option>
+      <option value="event-both">Both Events</option>
+    </select>
+  </div>
 </script>
 
 <script type="text/html" data-help-name="tuya-smart-device">
-    <p>This node will help you to configure any tuya smart device.</p>
+  <p>This node will help you to configure any tuya smart device.</p>
 
-    <h3>Details</h3>
-    <p>Instructions for getting the device id is available <a href="https://github.com/codetheweb/tuyapi/blob/master/docs/SETUP.md">here</a></p>
-   
-    <code>You will get the device id and the key once you run the wizard program as per the instructiions</code>
-    
-    
-    <p>The node takes the input which needs to be sent to the device and outouts the message if the state of the device changes.</p>
-        
+  <h3>Details</h3>
+  <p>
+    Instructions for getting the device id is available
+    <a href="https://github.com/codetheweb/tuyapi/blob/master/docs/SETUP.md"
+      >here</a
+    >
+  </p>
 
+  <code
+    >You will get the device id and the key once you run the wizard program as
+    per the instructiions</code
+  >
 
-    <h3>Input</h3>
-    <h4>payload</h4>
-    <dl class="message-properties">
-        <dt class="optional">operation
-            <span class="property-type">SET/GET</span>
+  <p>
+    The node takes the input which needs to be sent to the device and outouts
+    the message if the state of the device changes.
+  </p>
+
+  <h3>Input</h3>
+  <h4>payload</h4>
+  <dl class="message-properties">
+    <dt class="optional">
+      operation
+      <span class="property-type">SET/GET</span>
+    </dt>
+    <dd>
+      <p>
+        <b>SET</b> (default): Use SET the run a set operation in the device
+        <a href="https://codetheweb.github.io/tuyapi/index.html#tuyadeviceset"
+          >SET documentation</a
+        >
+      </p>
+      <p>
+        <b>GET</b>: Use GET the run a get operation in the device
+        <a href="https://codetheweb.github.io/tuyapi/index.html#tuyadeviceget"
+          >GET documentation</a
+        >
+      </p>
+      <p>
+        <b>REFRESH</b>: Use REFRESH to refresh a device status
+        <a
+          href="https://codetheweb.github.io/tuyapi/index.html#tuyadevicerefresh"
+          >REFRESH documentation</a
+        >
+      </p>
+      <p>
+        <b>CONTROL</b>: Send the control events to the node. This can be used to
+        issue actions like connect, disconnect etc.
+      </p>
+
+      Any output of the operation will be triggered on the output of the node.
+    </dd>
+    <dt class="">dps <span class="property-type">Number</span></dt>
+    <dd>The dps index you want to update or query</dd>
+    <dt class="">set <span class="property-type">Any</span></dt>
+    <dd>The value you want to set for the dps index</dd>
+    <dt class="optional">
+      multiple <span class="property-type">Boolean</span>
+    </dt>
+    <dd>
+      Incase you want to send multiple dps index for a SET operation. Use the
+      data argument in that case.
+    </dd>
+    <dt class="optional">data <span class="property-type">Object</span></dt>
+    <dd>
+      Object of the below format with multiple dps index and the values
+      <code>
+        payload = { "multiple": true, "data": { "20": true, "24": "00e203e803de"
+        } }</code
+      >
+    </dd>
+    <dt class="">dps <span class="property-type">action</span></dt>
+    <dd>
+      This property works only with operation is set as "CONTROL"
+
+      <table border>
+        <tr>
+          <td>Action</td>
+          <td>Purpose</td>
+        </tr>
+        <tr>
+          <td>CONNECT</td>
+          <td>Connects to the device</td>
+        </tr>
+        <tr>
+          <td>DISCONNECT</td>
+          <td>Disconnect from the device</td>
+        </tr>
+        <tr>
+          <td>RECONNECTS</td>
+          <td>Reconnects to the device</td>
+        </tr>
+        <tr>
+          <td>SET_FIND_TIMEOUT</td>
+          <td>
+            Sets the find timeout dynamically. This is not saved in the config
+          </td>
+        </tr>
+        <tr>
+          <td>SET_RETRY_TIMEOUT</td>
+          <td>
+            Sets the retry timeout dynamically. This is not saved in the config
+          </td>
+        </tr>
+      </table>
+    </dd>
+  </dl>
+
+  <h3>Output</h3>
+  <ol class="node-ports">
+    <li>
+      Data from device
+      <dl class="message-properties">
+        <dt class="">
+          deviceId
+          <span class="property-type">String</span>
         </dt>
-        <dd> 
-            <p>SET (default): Use SET the run a set operation in the device
-            <a href="https://codetheweb.github.io/tuyapi/index.html#tuyadeviceset">SET documentation</a> </p>
-            <p>GET: Use GET the run a get operation in the device
-            <a href="https://codetheweb.github.io/tuyapi/index.html#tuyadeviceget">GET documentation</a></p>
-            <p>REFRESH: Use REFRESH to refresh a device status
-            <a href="https://codetheweb.github.io/tuyapi/index.html#tuyadevicerefresh">REFRESH documentation</a> </p>
-
-            Any output of the operation will be triggered on the output of the node.
-        </dd>
-        <dt class="">dps <span class="property-type">Number</span></dt>
-        <dd>The dps index you want to update or query</dd>
-        <dt class="">set <span class="property-type">Any</span></dt>
-        <dd>The value you want to set for the dps index</dd>
-        <dt class="optional">multiple <span class="property-type">Boolean</span></dt>
-        <dd>Incase you want to send multiple dps index for a SET operation. Use the data argument in that case.</dd>
-        <dt class="optional">data <span class="property-type">Object</span></dt>
-        <dd>Object of the below format with multiple dps index and the values
-            <code>
-                payload = {
-                    "multiple": true,
-                    "data": {
-                        "20": true,
-                        "24": "00e203e803de"
-                    }
-                }</code>
-        </dd>
-    </dl>
-
-
-    <h3>Output</h3>
-    <dl class="message-properties">
-        <dt class="">deviceId
-            <span class="property-type">String</span>
-        </dt>
-        <dd> 
-           Device Id
-        </dd>
+        <dd>Device Id</dd>
         <dt class="">deviceName <span class="property-type">String</span></dt>
         <dd>Device Name</dd>
         <dt class="optional">data <span class="property-type">Object</span></dt>
-        <dd>The response from the Tuya device. Sample response is shown below.
-            <code>
-                data: {
-                   dps : {
-                       1 : false
-                   },
-                   t: 1600955043 
-                },
-                deviceId: "39390e7421ia",
-                deviceName: "Monitor Plug"
-                </code>
+        <dd>
+          The response from the Tuya device. Sample response is shown below.
+          <code>
+            data: { dps : { 1 : false }, t: 1600955043 }, deviceId:
+            "39390e7421ia", deviceName: "Monitor Plug"
+          </code>
         </dd>
-    </dl>
-
+      </dl>
+    </li>
+    <li>
+      Client state
+      <dl class="message-properties">
+        <dt class="">
+          state
+          <span class="property-type">String</span>
+        </dt>
+        <dd>
+          Shows the current status of the node (CONNECTED, CONNECTING,
+          DISCONNECTED,ERROR)
+        </dd>
+      </dl>
+    </li>
+  </ol>
 </script>

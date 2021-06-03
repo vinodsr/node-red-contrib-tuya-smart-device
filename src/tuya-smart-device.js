@@ -160,18 +160,24 @@ module.exports = function (RED) {
       };
     };
     const setStatusConnecting = function () {
-      node.deviceStatus = CLIENT_STATUS.CONNECTING;
-      node.send([null, sendDeviceConnectStatus()]);
+      if (node.deviceStatus != CLIENT_STATUS.CONNECTING) {
+        node.deviceStatus = CLIENT_STATUS.CONNECTING;
+        node.send([null, sendDeviceConnectStatus()]);
+      }
       return node.status({ fill: "yellow", shape: "ring", text: "connecting" });
     };
     const setStatusConnected = function () {
-      node.deviceStatus = CLIENT_STATUS.CONNECTED;
-      node.send([null, sendDeviceConnectStatus()]);
+      if (node.deviceStatus != CLIENT_STATUS.CONNECTED) {
+        node.deviceStatus = CLIENT_STATUS.CONNECTED;
+        node.send([null, sendDeviceConnectStatus()]);
+      }
       return node.status({ fill: "green", shape: "ring", text: "connected" });
     };
     const setStatusDisconnected = function () {
-      node.deviceStatus = CLIENT_STATUS.DISCONNECTED;
-      node.send([null, sendDeviceConnectStatus()]);
+      if (node.deviceStatus != CLIENT_STATUS.DISCONNECTED) {
+        node.deviceStatus = CLIENT_STATUS.DISCONNECTED;
+        node.send([null, sendDeviceConnectStatus()]);
+      }
       return node.status({ fill: "red", shape: "ring", text: "disconnected" });
     };
     const setStatusOnError = function (
@@ -179,9 +185,11 @@ module.exports = function (RED) {
       errorShortText = "error",
       data
     ) {
-      node.deviceStatus = CLIENT_STATUS.ERROR;
       node.error(errorText, data);
-      node.send([null, sendDeviceConnectStatus(data)]);
+      if (node.deviceStatus != CLIENT_STATUS.ERROR) {
+        node.deviceStatus = CLIENT_STATUS.ERROR;
+        node.send([null, sendDeviceConnectStatus()]);
+      }
       return node.status({ fill: "red", shape: "ring", text: errorShortText });
     };
     const connectionParams = {
@@ -200,6 +208,7 @@ module.exports = function (RED) {
       retryTimerHandler = setTimeout(() => {
         connectDevice();
       }, node.retryTimeout);
+      node.log(`Retrying reconnect after ${node.retryTimeout} milliseconds`);
     };
     node.on("close", function () {
       // tidy up any state
@@ -284,7 +293,9 @@ module.exports = function (RED) {
       setStatusConnecting();
       node.log("Initiating the find command");
       tuyaDevice
-        .find()
+        .find({
+          timeout: parseInt(node.findTimeout / 1000),
+        })
         .then(() => {
           // Connect to device
           connectDevice();
@@ -301,7 +312,7 @@ module.exports = function (RED) {
           });
           if (shouldTryReconnect) {
             node.log("Cannot find the device, re-trying...");
-            findTimeoutHandler = setTimeout(findDevice, node.findTimeout);
+            findTimeoutHandler = setTimeout(findDevice, node.retryTimeout);
           } else {
             node.log("not retrying the find as shouldTryReconnect = false");
           }

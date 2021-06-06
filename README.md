@@ -49,6 +49,22 @@ Once you setup the node, you can then use input to send any command to the devic
 
 You can refer the [example flow](./examples/latest.json) to get started
 
+# Troubleshooting
+
+- **I am getting "Can't find device error"**
+
+  The can't find device error can be due to many reasons
+
+  1.  Make sure the device is powered on
+  1.  Make sure the Device ID / IP / Key are correct
+  1.  Make sure that you haven't created multiple nodes for the same device. Multiple connections to the same device is not possible. This is a limitation of TuyAPI.
+
+- **What is the difference between FindTimeout and RetryTimeout?**
+
+  `FindTimeout` is the time in milliseconds that tuya api will check for a device. Once the timeout has breached, the can't find device error is shown.
+
+  `RetryTimeout` is the time in milliseconds to wait for the node to retry the connection once the device connection is disconnected due to some unexpected errors.
+
 # License
 
 [(Back to top)](#table-of-contents)

@@ -115,9 +115,17 @@ module.exports = function (RED) {
           } else if (msg.payload.action == "DISCONNECT") {
             closeComm();
           } else if (msg.payload.action == "SET_FIND_TIMEOUT") {
-            setFindTimeout(msg.payload.value);
+            if (!isNaN(msg.payload.value) && msg.payload.value > 0) {
+              setFindTimeout(msg.payload.value);
+            } else {
+              node.log("Invalid find timeout ! - " + msg.payload.value);
+            }
           } else if (msg.payload.action == "SET_RETRY_TIMEOUT") {
-            setRetryTimeout(msg.payload.value);
+            if (!isNaN(msg.payload.value) && msg.payload.value > 0) {
+              setRetryTimeout(msg.payload.value);
+            } else {
+              node.log("Invalid retry timeout ! - " + msg.payload.value);
+            }
           } else if (msg.payload.action == "RECONNECT") {
             startComm();
           }
@@ -320,7 +328,18 @@ module.exports = function (RED) {
       clearTimeout(findTimeoutHandler);
       if (tuyaDevice.isConnected() === false) {
         setStatusConnecting();
-        tuyaDevice.connect();
+        const connectHandle = tuyaDevice.connect();
+        connectHandle.catch((e) => {
+          setStatusDisconnected();
+          node.log(
+            `An error had occurred with tuya API : ${JSON.stringify(e)}`
+          );
+          if (shouldTryReconnect) {
+            findTimeoutHandler = setTimeout(findDevice, node.findTimeout);
+          } else {
+            node.log("not retrying the find as shouldTryReconnect = false");
+          }
+        });
       } else {
         node.log("already connected. skippig the connect call");
         setStatusConnected();

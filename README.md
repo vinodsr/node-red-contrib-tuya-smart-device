@@ -8,15 +8,16 @@ A node-red module which helps you to connect to any tuya device.
 
 Fork from https://github.com/vinodsr/node-red-contrib-tuya-smart-device to test more devices and to standardiuze the behavior.
 
-###General criteria 
-1)  User reference configuration: 20+ `node-red-contrib-tuya-smart-device` in the same flow, some devices unconnected, some devices PUSHing data, some devices POLLed (REFRESH/GET) every 5 sec.
-2)  Consequential guidelines, from the _node-red-contrib-tuya-smart-device user_ point of view:
-    a) _Functional implementation_: as described by the following 'expected behavior' notes.
-    b) _Anonymized log_, to allow simple sharing.
-    c) _Log message_: minimal, to reduce the CPU load. minimal trace allowd, and RECOVERABLE misuse WARNINGs, the default is Silent Ignore. (so log can be a help in fine tuning the app).
-    d) _STATE ERROR msg_: only in case of UNRECOVERABLE ERROR, a misuse that MUST be correct in the desig phase. In production the node MUST run without ERROR msg.
+### General criteria 
 
-
+<ol> <li> User reference configuration: 20+ `node-red-contrib-tuya-smart-device` in the same flow, some devices unconnected, some devices PUSHing data, some devices POLLed (REFRESH/GET) every 5 sec.
+<li> Consequential guidelines, from the "node-red-contrib-tuya-smart-device user" point of view:
+<ol type='a'> <li> Functional implementation: as described by the following 'expected behavior' notes.
+ <li> Anonymized log, to allow simple sharing.
+ <li> Log console messages: minimal, to reduce the CPU load. minimal trace allowed, and RECOVERABLE misuse WARNINGs, the default is Silent Ignore. (so log can be a help in fine tuning the app).
+ <li> detailed console trace, for troubleshooting,  in debug mode.
+ <li> STATE ERROR msg: only in case of UNRECOVERABLE ERROR, a misuse that MUST be correct in the desig phase. In production the node MUST run without ERROR msg.
+</ol></ol>
 
 **TEST flow** used:
 ![](https://github.com/msillano/tuyaDAEMON/blob/main/pics/ScreenShot_20210609163905.png?raw=true), see file: []()

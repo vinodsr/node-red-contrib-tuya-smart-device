@@ -11,9 +11,9 @@ Fork from https://github.com/vinodsr/node-red-contrib-tuya-smart-device to test 
 ###General criteria 
 1)  User reference configuration: 20+ `node-red-contrib-tuya-smart-device` in the same flow, some devices unconnected, some devices PUSHing data, some devices POLLed (REFRESH/GET) every 5 sec.
 2)  Consequential guidelines, from the _node-red-contrib-tuya-smart-device user_ point of view:
-    a) _Functional implementation_: as described from following 'expected behavior' notes.
+    a) _Functional implementation_: as described by the following 'expected behavior' notes.
     b) _Anonymized log_, to allow simple sharing.
-    c) _Log message_: minimal, to reduce the CPU charge. Allowed minimal trace, and WARNING in case of RECOVERABLE misuse, default is quiet ignore. (so log can be an help for fine tuning of the app).
+    c) _Log message_: minimal, to reduce the CPU load. minimal trace allowd, and RECOVERABLE misuse WARNINGs, the default is Silent Ignore. (so log can be a help in fine tuning the app).
     d) _STATE ERROR msg_: only in case of UNRECOVERABLE ERROR, a misuse that MUST be correct in the desig phase. In production the node MUST run without ERROR msg.
 
 
@@ -46,14 +46,14 @@ msg.payload.data.dps : Object
 { 18: 62, 19: 53 }  // ERROR !!!, expected 1,9,6,17,18,19,20 DPS, found only 18,19
 ````
 note:
-  **The expected behavior is not provided by ANY device because the 'tuyAPI' definitions are equivocal, and the tuyAPI implementation is not consistent with the definitions.**
+  **The expected behavior is not provided by ANY device because the 'tuyAPI' definitions are equivocal, and the implementation of tuyAPI is not consistent with the definitions.**
   The RULES I found on all my devices are, see [ISSUE#469](https://github.com/codetheweb/tuyapi/issues/469#issue-891834622):
 
->  - The REFRESH causes an immediate re-sampling: ALL data are re-calculated.
->  - In output are sent ALWAYS ONLY the CHANGED DPS (NOT all DPS (SCHEMA) or the DPS in the `requestedDPS`  array!).
->  - REFRESH, REFRESH SCHEMA, REFRESH DPS works ALL the SAME WAY: i.e. exists only one REFRESH function (at least, with the implementation under the test of tuyAPI ver. 7.1.0 ).
+>  - REFRESH causes immediate resampling: ALL data is recalculated.
+>  - ONLY the CHANGED DPS are sent ALWAYS in output (NOT all DPS (SCHEMA) or the DPS in the `requestedDPS`  array!): i.e. conseguential with Tuya's aim to reduce the bandwidth.
+>  - REFRESH, REFRESH SCHEMA, REFRESH DPS: ALL works the SAME WAY: i.e. there is only one REFRESH function (at least, with the implementation under test: tuyAPI ver. 7.1.0 ).
   
-  In applications I use only one vanilla REFRESH, applying previous rules, and it works as expected.
+  In applications I only use a vanilla REFRESH, applying the above rules, and it works as expected with all my devices.
  
  ---------------------------------------------
  ### Expected behavior: at STARTUP, device _ON_, Disable auto-connect on start: _false_

@@ -1,5 +1,5 @@
 const TuyaDevice = require("tuyapi");
-
+const packageInfo = require("../package.json");
 const CLIENT_STATUS = {
   DISCONNECTED: "DISCONNECTED",
   CONNECTED: "CONNECTED",
@@ -21,7 +21,12 @@ module.exports = function (RED) {
     this.deviceIp = config.deviceIp;
     this.disableAutoStart = config.disableAutoStart;
     this.eventMode = config.eventMode || "event-both";
-    node.log(`Recieved the config ${JSON.stringify(config)}`);
+    node.log(
+      `Recieved the config ${JSON.stringify({
+        ...config,
+        moduleVersion: packageInfo.version,
+      })}`
+    );
     this.retryTimeout =
       config.retryTimeout == null ||
       typeof config.retryTimeout == "undefined" ||

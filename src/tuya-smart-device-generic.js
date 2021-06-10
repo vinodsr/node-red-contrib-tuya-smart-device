@@ -1,4 +1,5 @@
 const TuyaDevice = require("tuyapi");
+const packageInfo = require("../package.json");
 
 module.exports = function (RED) {
   function TuyaSmartDeviceSelfNode(config) {
@@ -25,7 +26,10 @@ module.exports = function (RED) {
       delete msg.payload.operation;
       let requestID = new Date().getTime();
       node.log(
-        `[${requestID}] recieved data on input : ${JSON.stringify(msg)}`
+        `[${requestID}] recieved data on input : ${JSON.stringify({
+          ...msg,
+          moduleVersion: packageInfo.version,
+        })}`
       );
       // Initiate the device connection and then send the payload
       node.operations.push(1);

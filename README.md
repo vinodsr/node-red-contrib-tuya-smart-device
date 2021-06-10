@@ -47,7 +47,7 @@ note:
   In applications I use only one vanilla REFRESH, applying previous rules, and it works as expected.
  
  ---------------------------------------------
- ### Expected behavior STARTUP, device _ON_, Disable auto-connect on start: _false_
+ ### Expected behavior: at STARTUP, device _ON_, Disable auto-connect on start: _false_
  ````
 9/6/2021, 13:20:41node: Node State
 msg.payload : Object
@@ -82,7 +82,7 @@ note:
 - Required: the initial 'DISCONNECTED' and the final 'CONNECTED'.
 -------------------------------------------------------------------------
    
-  ### Expected behavior STARTUP, device _ON_, Disable auto-connect on start: _true_
+  ### Expected behavior: at STARTUP, device _ON_, Disable auto-connect on start: _true_
   
  ````  
  9/6/2021, 17:15:05node: Device State
@@ -111,7 +111,7 @@ msg.payload : Object
 - Required: user CONTROL 'CONNECT'|'RECONNECT' and the final 'CONNECTED'.
   
  ---------------------------------------------
- ### Expected behavior STARTUP, device _OFF_, Disable auto-connect on start: _false_
+ ### Expected behavior: at STARTUP, device _OFF_, Disable auto-connect on start: _false_
 ```` 
 9/6/2021, 12:51:53node: Node State
 msg.payload : Object
@@ -158,7 +158,7 @@ Required:
    - No `node.error` messages.
 	 
 ---------------------------------------------	 
- ### Expected behavior  device _OFF => ON_
+ ### Expected behavior:  device _OFF => ON_
 ```` 
 9/6/2021, 13:37:53node: Node State
 msg.payload : Object
@@ -242,7 +242,7 @@ Required:
   - No 'node.error' messages.
 
 ---------------------------------------------	 
- ### Expected behavior  CONNECT/DISCONNECT/RECONNECT
+ ### Expected behavior:  CONNECT/DISCONNECT/RECONNECT CONTROL
  start condition:  _STARTUP_, device _ON_
 ````
 9/6/2021, 14:03:39node: Node State
@@ -344,7 +344,7 @@ Required:
  - DISCONNECT; disconnects the device, if CONNECTED, else does nothing.
  - RECONNECT: disconnects the device, if CONNECTED, then (re)connects them.
 
-### Expected behavior SET/GET/SCHEMA
+### Expected behavior: SET/GET/SCHEMA
 
 ````
 //------------ SET 1, true

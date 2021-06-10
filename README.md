@@ -45,6 +45,11 @@ Once you setup the node, you can then use input to send any command to the devic
 
 ![image](./img/output.png)
 
+> If you need the error thrown by the node use the catch node.
+
+> The status output sends the state of the client (CONNECTING,CONNECTED,ERROR or DISCONNECTED). It will only send message if the state has been changed. . eg: even though multiple errors have been thrown, only once the ERROR state will be send. One possible scenario is
+> `ERROR -> CONNECTING -> CONNECTED`. again if ERROR occurs , then the state is send out of the node.
+
 # Examples
 
 You can refer the [example flow](./examples/latest.json) to get started
@@ -64,6 +69,10 @@ You can refer the [example flow](./examples/latest.json) to get started
   `FindTimeout` is the time in milliseconds that tuya api will check for a device. Once the timeout has breached, the can't find device error is shown.
 
   `RetryTimeout` is the time in milliseconds to wait for the node to retry the connection once the device connection is disconnected due to some unexpected errors.
+
+- **What is the purpose of the status output ?**
+
+  The status output can be used to get the state of the current node(client). Whether disconnected or in error. You can make logic in node-red using this status. If you need to catch the whole error use the catch node.
 
 # License
 

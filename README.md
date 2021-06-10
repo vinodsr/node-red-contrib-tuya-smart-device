@@ -8,9 +8,18 @@ A node-red module which helps you to connect to any tuya device.
 
 Fork from https://github.com/vinodsr/node-red-contrib-tuya-smart-device to test more devices and to standardiuze the behavior.
 
+###General criteria 
+1)  User reference configuration: 20+ `node-red-contrib-tuya-smart-device` in the same flow, some devices unconnected, some devices PUSHing data, some devices POLLed (REFRESH/GET) every 5 sec.
+2)  Consequential guidelines, from the _node-red-contrib-tuya-smart-device user_ point of view:
+    a) _Functional implementation_: as described from following 'expected behavior' notes.
+    b) _Anonymized log_, to allow simple sharing.
+    c) _Log message_: minimal, to reduce the CPU charge. Allowed minimal trace, and WARNING in case of RECOVERABLE misuse, default is quiet ignore. (so log can be an help for fine tuning of the app).
+    d) _STATE ERROR msg_: only in case of UNRECOVERABLE ERROR, a misuse that MUST be correct in the desig phase. In production the node MUST run without ERROR msg.
+
+
 
 **TEST flow** used:
-![](https://github.com/msillano/tuyaDAEMON/blob/main/pics/ScreenShot_20210609163905.png?raw=true)
+![](https://github.com/msillano/tuyaDAEMON/blob/main/pics/ScreenShot_20210609163905.png?raw=true), see file: []()
 
 **Devices** tested: [Wifi Plug](https://github.com/msillano/tuyaDAEMON/blob/main/devices/Wifi_Plug/device_Wifi_Plug.pdf): passed, [Power Strip](https://github.com/msillano/tuyaDAEMON/blob/main/devices/power_strip/device_power_strip.pdf): passed, [LED 700ml Humidifier](https://github.com/msillano/tuyaDAEMON/blob/main/devices/LED_700ml_Humidifier/device_LED_700ml_Humidifier.pdf): passed.
 
@@ -40,9 +49,9 @@ note:
   **The expected behavior is not provided by ANY device because the 'tuyAPI' definitions are equivocal, and the tuyAPI implementation is not consistent with the definitions.**
   The RULES I found on all my devices are, see [ISSUE#469](https://github.com/codetheweb/tuyapi/issues/469#issue-891834622):
 
->  - The REFRESH causes an immediate re-sampling and ALL data are re-calculated.
->  - In output are sent ALWAYS only the CHANGED dps (not all (SCHEMA) or requestedDPS !).
->  - REFRESH, REFRESH SCHEMA, REFRESH DPS works ALL the same way: i.e. exists only one REFRESH function (at least, with the implementation under the test of tuyAPI ver. 7.1.0 ).
+>  - The REFRESH causes an immediate re-sampling: ALL data are re-calculated.
+>  - In output are sent ALWAYS ONLY the CHANGED DPS (NOT all DPS (SCHEMA) or the DPS in the `requestedDPS`  array!).
+>  - REFRESH, REFRESH SCHEMA, REFRESH DPS works ALL the SAME WAY: i.e. exists only one REFRESH function (at least, with the implementation under the test of tuyAPI ver. 7.1.0 ).
   
   In applications I use only one vanilla REFRESH, applying previous rules, and it works as expected.
  

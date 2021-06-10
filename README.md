@@ -5,83 +5,425 @@
 ![License](https://img.shields.io/github/license/vinodsr/node-red-contrib-tuya-smart-device)
 
 A node-red module which helps you to connect to any tuya device.
+Fork from https://github.com/vinodsr/node-red-contrib-tuya-smart-device to share updates.
 
-![image](./img/sample.png)
 
-# Table of contents
+**TEST flow** used:
+![](https://github.com/msillano/tuyaDAEMON/blob/main/pics/ScreenShot_20210609163905.png?raw=true)
 
-- [Getting Started](#getting-started)
-- [Setup](#setup)
-  - [Input Format](#input-format)
-  - [Output Format](#output-format)
-- [License](#license)
-- [Contributing](#contributing)
+**Devices** tested: [Wifi Plug](https://github.com/msillano/tuyaDAEMON/blob/main/devices/Wifi_Plug/device_Wifi_Plug.pdf): passed, [Power Strip](https://github.com/msillano/tuyaDAEMON/blob/main/devices/power_strip/device_power_strip.pdf): passed, [LED 700ml Humidifier](https://github.com/msillano/tuyaDAEMON/blob/main/devices/LED_700ml_Humidifier/device_LED_700ml_Humidifier.pdf): passed.
 
-# Getting Started
+These devices are chosen because all accept SCHEMA. Tuya devices can present many variations to [expected behavior](https://github.com/msillano/tuyaDAEMON/tree/main/tuyaDAEMON#tuya-devices-capabilities-as-currently-known).
 
-Instructions for getting the device id is available [here](https://github.com/codetheweb/tuyapi/blob/master/docs/SETUP.md)
+-------------------------------------------
+### Expected behavior REFRESH
+````
+9/6/2021, 11:04:11node: Device INPUT
+msg.payload : Object
+object
+   operation: "REFRESH"
+   requestedDPS: array[7]
+		0: 1
+		1: 9
+		2: 6
+		3: 17
+		4: 18
+		5: 19
+		6: 20
 
-You will get the device id and the key once you run the wizard program as per the instructiions
+9/6/2021, 11:04:11node: Device Data
+msg.payload.data.dps : Object
+{ 18: 62, 19: 53 }  // ERROR !!!, expected 1,9,6,17,18,19,20 DPS, found only 18,19
+````
+note:
+  **The expected behavior is not provided by ANY device because the 'tuyAPI' definitions are equivocal, and the tuyAPI implementation is not consistent with the definitions.**
+  The RULES I found on all my devices are, see [ISSUE#469](https://github.com/codetheweb/tuyapi/issues/469#issue-891834622):
 
-Get more details about latest version changes in the [CHANGELOG.md](./changelog.md)
+>  - The REFRESH causes an immediate re-sampling and all data are re-calculated.
+>  - In output are sent ALWAYS only the CHANGED dps (not all (SCHEMA) or requestedDPS !).
+>  - REFRESH, REFRESH SCHEMA, REFRESH DPS works ALL the same way: i.e. exists only one REFRESH function (at least, with the implementation under the test of tuyAPI ver. 7.1.0 ).
+  
+  In applications I use only one vanilla REFRESH, applying previous rules, and it works as expected.
+ 
+ ---------------------------------------------
+ ### Expected behavior STARTUP, device _ON_, Disable auto-connect on start: _false_
+ ````
+9/6/2021, 13:20:41node: Node State
+msg.payload : Object
+{ state: "DISCONNECTED" }
 
-# Setup
+9/6/2021, 13:20:42node: Node State
+msg.payload : Object
+{ state: "CONNECTING" }
 
-[(Back to top)](#table-of-contents)
+9/6/2021, 13:20:43node: Node State
+msg.payload : Object
+{ state: "ERROR", context: object }
 
-The node takes one input and one output. Once you drop the node into the flow, you need to use the deviceid and devicekey that you got from the getting started step.
+9/6/2021, 13:20:43node: Node State
+msg.payload : Object
+{ state: "DISCONNECTED" }
 
-Once you setup the node, you can then use input to send any command to the device as per the tuya standards.
+..... more
 
-# Input Format
+9/6/2021, 13:20:50node: Node State
+msg.payload : Object
+{ state: "CONNECTING" }
 
-[(Back to top)](#table-of-contents)
+9/6/2021, 13:20:51node: Node State
+msg.payload : Object
+{ state: "CONNECTED" }
+````
+note:
+- The CONNECTING-ERROR-DISCONNECTED cycle can be repeated more times: it is OK, can be 
+     a consequence of too small _findTimeout_ value.
+- In this case, the ERROR msg is superfluous: enough to ignore it in apps.
+- Required: the initial 'DISCONNECTED' and the final 'CONNECTED'.
+-------------------------------------------------------------------------
+   
+  ### Expected behavior STARTUP, device _ON_, Disable auto-connect on start: _true_
+  
+ ````  
+ 9/6/2021, 17:15:05node: Device State
+msg.payload : Object
+{ state: "DISCONNECTED" }
+OK ---- waiting  CONTROL CONNECT
+------ now CONTROL CONNECT
 
-![image](./img/input.png)
+9/6/2021, 17:15:30node: Device INPUT
+msg.payload : Object
+{ operation: "CONTROL", action: "CONNECT" }
 
-# Output Format
+9/6/2021, 17:15:31node: Device State
+msg.payload : Object
+{ state: "CONNECTING" }
 
-[(Back to top)](#table-of-contents)
+9/6/2021, 17:15:33node: Device State
+msg.payload : Object
+{ state: "CONNECTED" } 
 
-![image](./img/output.png)
+```` 
+ note:
+- 'Disable auto-connect on start' is for only the first start after Deploy or Restart flows.
+    If later the device goes OFF then back ON, the device is auto-connected.
 
-> If you need the error thrown by the node use the catch node.
+- Required: user CONTROL 'CONNECT'|'RECONNECT' and the final 'CONNECTED'.
+  
+ ---------------------------------------------
+ ### Expected behavior STARTUP, device _OFF_, Disable auto-connect on start: _false_
+```` 
+9/6/2021, 12:51:53node: Node State
+msg.payload : Object
+{ state: "DISCONNECTED" }
 
-> The status output sends the state of the client (CONNECTING,CONNECTED,ERROR or DISCONNECTED). It will only send message if the state has been changed. . eg: even though multiple errors have been thrown, only once the ERROR state will be send. One possible scenario is
-> `ERROR -> CONNECTING -> CONNECTED`. again if ERROR occurs , then the state is send out of the node.
+9/6/2021, 12:51:54node: Node State
+msg.payload : Object
+{ state: "CONNECTING" }
 
-# Examples
+9/6/2021, 12:52:14node: Node State
+msg.payload : Object
+state: "ERROR"
+    context: object
+       message: "Error: find() timed out. Is the device powered on and the ID or IP correct?"
+       device: "Wifi plug"
+	   
+9/6/2021, 12:52:14node: Node State
+msg.payload : Object
+{ state: "DISCONNECTED" }
 
-You can refer the [example flow](./examples/latest.json) to get started
+9/6/2021, 12:52:24node: Node State
+msg.payload : Object
+{ state: "CONNECTING" }
 
-# Troubleshooting
+9/6/2021, 12:52:44node: Node State
+msg.payload : Object
+state: "ERROR"
+   context: object
+      message: "Error: find() timed out. Is the device powered on and the ID or IP correct?"
+      device: "Wifi plug"
+......  more
 
-- **I am getting "Can't find device error"**
+````
+note:
+- Never-ending loop CONNECTING-ERROR-DISCONNECTED.
+- In this case, the ERROR msg is superfluous: enough to ignore it in apps.
+	- Between CONNECTING-ERROR, 20s == _findTimeout_
+	- Between ERROR-DISCONNECTED  0s
+	- Between DISCONNECTED-CONNECTING, 10s == _retryTimeout_
+	
+Required: 	
+   - the initial 'DISCONNECTED'.
+   - Infinite loop CONNECTING-(ERROR)-DISCONNECTED.
+   - No `node.error` messages.
+	 
+---------------------------------------------	 
+ ### Expected behavior  device _OFF => ON_
+```` 
+9/6/2021, 13:37:53node: Node State
+msg.payload : Object
+{ state: "DISCONNECTED" }
+// ---- here device goes ON
 
-  The can't find device error can be due to many reasons
+9/6/2021, 13:37:58node: Node State
+msg.payload : Object
+{ state: "CONNECTING" }
 
-  1.  Make sure the device is powered on
-  1.  Make sure the Device ID / IP / Key are correct
-  1.  Make sure that you haven't created multiple nodes for the same device. Multiple connections to the same device is not possible. This is a limitation of TuyAPI.
+9/6/2021, 13:38:03node: Node State
+msg.payload : Object
+state: "ERROR"
+   context: object
+      message: "Error: find() timed out. Is the device powered on and the ID or IP correct?"
+      device: "Wifi plug"
+	  
+9/6/2021, 13:38:03node: Node State
+msg.payload : Object
+{ state: "DISCONNECTED" }
 
-- **What is the difference between FindTimeout and RetryTimeout?**
+9/6/2021, 13:38:08node: Node State
+msg.payload : Object
+{ state: "CONNECTING" }
 
-  `FindTimeout` is the time in milliseconds that tuya api will check for a device. Once the timeout has breached, the can't find device error is shown.
+9/6/2021, 13:38:10node: Node State
+msg.payload : Object
+{ state: "CONNECTED" }
 
-  `RetryTimeout` is the time in milliseconds to wait for the node to retry the connection once the device connection is disconnected due to some unexpected errors.
 
-- **What is the purpose of the status output ?**
+9/6/2021, 13:38:32node: Device Data
+msg.payload.data.dps : Object
+{ 18: 62, 19: 53, 20: 2295 }
+````	 
+note:
+- Required: the final 'CONNECTED'.
+	 
+---------------------------------------------	 
+ ### Expected behavior  device ON => OFF
 
-  The status output can be used to get the state of the current node(client). Whether disconnected or in error. You can make logic in node-red using this status. If you need to catch the whole error use the catch node.
+````	 
 
-# License
+9/6/2021, 13:50:21node: Device Data
+msg.payload.data.dps : Object
+{ 18: 62, 19: 53, 20: 2299 }
+//---- here device goes OFF
 
-[(Back to top)](#table-of-contents)
+9/6/2021, 13:50:32node: Node State
+msg.payload : Object
+{ state: "DISCONNECTED" }
 
-MIT License - Copyright (c) 2020 Vinod S R
+9/6/2021, 13:50:37node: Node State
+msg.payload : Object
+{ state: "CONNECTING" }
 
-# Contributing
+9/6/2021, 13:50:42node: Node State
+msg.payload : Object
+{ state: "DISCONNECTED" }
 
-[(Back to top)](#table-of-contents)
+9/6/2021, 13:50:52node: Node State
+msg.payload : Object
+{ state: "CONNECTING" }
 
-Your contributions are always welcome! Please have a look at the [contribution guidelines](CONTRIBUTING.md) first. :tada:
+9/6/2021, 13:50:57node: Node State
+msg.payload : Object
+{ state: "DISCONNECTED" }
+
+9/6/2021, 13:51:07node: Node State
+msg.payload : Object
+{ state: "CONNECTING" }
+..........  more
+````
+note:
+- Never-ending loop CONNECTING-DISCONNECTED.
+- difference from STARTUP-OFF case: the STATE ERROR message is now missed: no problem, it is superfluous.
+	- Between CONNECTING-DISCONNECTED  5s ==  _findTimeout_
+	- Between DISCONNECTED-CONNECTING, 10s == _retryTimeout_
+
+Required:
+  - Infinite loop CONNECTING-(ERROR)-DISCONNECTED.
+  - No 'node.error' messages.
+
+---------------------------------------------	 
+ ### Expected behavior  CONNECT/DISCONNECT/RECONNECT
+ start condition:  _STARTUP_, device _ON_
+````
+9/6/2021, 14:03:39node: Node State
+msg.payload : Object
+{ state: "DISCONNECTED" }
+
+9/6/2021, 14:03:40node: Node State
+msg.payload : Object
+{ state: "CONNECTING" }
+
+9/6/2021, 14:03:43node: Node State
+msg.payload : Object
+{ state: "CONNECTED" }
+------- now CONTROL DISCONNECT
+
+9/6/2021, 14:03:48node: Device INPUT
+msg.payload : Object
+{ operation: "CONTROL", action: "DISCONNECT" }
+
+9/6/2021, 14:03:48node: Node State
+msg.payload : Object
+{ state: "DISCONNECTED" }
+OK, done ---- now more CONTROL DISCONNECT
+
+9/6/2021, 14:04:13node: Device INPUT
+msg.payload : Object
+{ operation: "CONTROL", action: "DISCONNECT" }
+OK, no effect ----  now CONTROL CONNECT
+
+9/6/2021, 14:04:24node: Device INPUT
+msg.payload : Object
+{ operation: "CONTROL", action: "CONNECT" }
+
+9/6/2021, 14:04:25node: Node State
+msg.payload : Object
+{ state: "CONNECTING" }
+
+9/6/2021, 14:04:26node: Node State
+msg.payload : Object
+{ state: "CONNECTED" }
+// OK, done  ----  now more CONTROL CONNECT
+
+9/6/2021, 14:04:31node: Device INPUT
+msg.payload : Object
+{ operation: "CONTROL", action: "CONNECT" }
+//  OK, no effect --- now CONTROL RECONNECT
+
+9/6/2021, 14:04:44node: Device INPUT
+msg.payload : Object
+{ operation: "CONTROL", action: "RECONNECT" }
+
+9/6/2021, 14:04:44node: Node State
+msg.payload : Object
+{ state: "DISCONNECTED" }
+
+9/6/2021, 14:04:45node: Node State
+msg.payload : Object
+{ state: "CONNECTING" }
+
+9/6/2021, 14:04:45node: Node State
+msg.payload : Object
+{ state: "CONNECTED" }
+//  OK, done --- now second CONTROL RECONNECT
+
+9/6/2021, 14:04:50node: Device INPUT
+msg.payload : Object
+{ operation: "CONTROL", action: "RECONNECT" }
+
+9/6/2021, 14:04:50node: Node State
+msg.payload : Object
+{ state: "DISCONNECTED" }
+
+9/6/2021, 14:04:51node: Node State
+msg.payload : Object
+{ state: "CONNECTING" }
+// ok, re-done .....
+...........   more
+
+9/6/2021, 15:36:55node: Node State
+msg.payload : Object
+{ state: "DISCONNECTED" }
+------------ now RECONNECT (but device DISCONNECTED)
+
+9/6/2021, 15:36:57node: Device INPUT
+msg.payload : Object
+{ operation: "CONTROL", action: "RECONNECT" }
+
+9/6/2021, 15:36:59node: Node State
+msg.payload : Object
+{ state: "CONNECTING" }
+
+9/6/2021, 15:37:00node: Node State
+msg.payload : Object
+{ state: "CONNECTED" }
+// OK, done: connected
+````
+Required:
+  - CONNECT; connects the device, if DISCONNECTED, else does nothing.
+ - DISCONNECT; disconnects the device, if CONNECTED, else does nothing.
+ - RECONNECT: disconnects the device, if CONNECTED, then (re)connects them.
+
+### Expected behavior SET/GET/SCHEMA
+
+````
+//------------ SET 1, true
+9/6/2021, 15:59:47node: Device INPUT
+msg.payload : Object
+{ dps: 1, set: true }
+
+9/6/2021, 15:59:47node: Device Data
+msg.payload.data.dps : Object
+{ 1: true }
+// OK: as expected --- SET 1, false
+
+9/6/2021, 15:59:49node: Device INPUT
+msg.payload : Object
+{ dps: 1, set: false }
+9/6/2021, 15:59:49node: Device Data
+msg.payload.data.dps : Object
+{ 1: false }
+//  OK: as expected --- GET 1
+
+9/6/2021, 15:59:55node: Device INPUT
+msg.payload : Object
+{ operation: "GET", dps: 1 }
+
+9/6/2021, 15:59:55node: Device Data
+msg.payload.data.dps : Object
+{ 1: false
+9: 0
+17: 2
+18: 0
+19: 0
+20: 2299
+21: 1
+22: 627
+23: 29228
+24: 17033
+25: 2460
+26: 0
+38: "memory"
+41: ""
+42: ""
+46: false }
+//  ** Device quirk: the GET answer is like 'SCHEMA'
+//--------- else using: SET 1, null
+
+9/6/2021, 16:06:10node: Device INPUT
+msg.payload : Object
+{ dps: 1, set: null }
+9/6/2021, 16:06:10node: Device Data
+msg.payload.data.dps : Object
+{ 1: true }
+//  OK, as expected ----- with this device use alway 'SET dp, null' in place of 'GET dp'
+// now--------  SCHEMA
+
+9/6/2021, 16:06:16node: Device INPUT
+msg.payload : Object
+{ operation: "GET", schema: true }
+
+9/6/2021, 16:06:16node: Device Data
+msg.payload.data.dps : Object
+object
+1: true
+9: 0
+17: 2
+18: 0
+19: 0
+20: 2299
+21: 1
+22: 627
+23: 29228
+24: 17033
+25: 2460
+26: 0
+38: "memory"
+41: ""
+42: ""
+46: false }
+//  OK, as expected
+````
+note:
+-  The unusual behavior of the 'Wifi Plug' in the case 'GET 1' was  [known](https://github.com/msillano/tuyaDAEMON/blob/main/devices/Wifi_Plug/device_Wifi_Plug.pdf).
+- The SET/GET/SCHEMA device behavior is complicated by the presence of some fallbacks on `tuyAPI` implementation, so an unexpected result can become from the devices but also from tuyAPI.
+- As `tuyAPI` users, we must accept the `tuyAPI + device` as a unique black-block, ready to accept possibles differences in the behavior for every new version.

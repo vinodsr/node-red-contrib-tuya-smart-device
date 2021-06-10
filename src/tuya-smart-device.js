@@ -139,41 +139,43 @@ module.exports = function (RED) {
     });
 
     const enableNode = () => {
-      console.log("enabling the node", node.id);
+      console.log("enableNode(): enabling the node", node.id);
       startComm();
     };
 
     const disableNode = () => {
-      console.log("disabling the node", node.id);
+      console.log("disableNode(): disabling the node", node.id);
       closeComm();
     };
 
     const setFindTimeout = (newTimeout) => {
-      node.log("Setting new find timeout :" + newTimeout);
+      node.log("setFindTimeout(): Setting new find timeout :" + newTimeout);
       node.findTimeout = newTimeout;
     };
 
     const setRetryTimeout = (newTimeout) => {
-      node.log("Setting new retry timeout :" + newTimeout);
+      node.log("setRetryTimeout(): Setting new retry timeout :" + newTimeout);
       node.retryTimeout = newTimeout;
     };
 
     const closeComm = () => {
-      node.log("Cleaning up the state");
-      node.log("Clearing the find timeout handler");
+      node.log("closeComm(): Cleaning up the state");
+      node.log("closeComm(): Clearing the find timeout handler");
       clearTimeout(findTimeoutHandler);
       shouldTryReconnect = false;
-      node.log("Disconnecting from Tuya Device");
+      node.log("closeComm(): Disconnecting from Tuya Device");
       tuyaDevice.disconnect();
       setStatusDisconnected();
     };
 
     const startComm = () => {
       closeComm();
+      // This 1 sec timeout will make sure that the diconnect happens ..
+      // otherwise connect will not hanppen as the state is not changed
       findTimeoutHandler = setTimeout(() => {
         shouldTryReconnect = true;
         node.log(
-          `Connecting to Tuya with params ${JSON.stringify(
+          `startComm(): Connecting to Tuya with params ${JSON.stringify(
             connectionParams
           )} , findTimeout :  ${node.findTimeout} , retryTimeout:  ${
             node.retryTimeout
@@ -337,27 +339,36 @@ module.exports = function (RED) {
         connectHandle.catch((e) => {
           setStatusDisconnected();
           node.log(
-            `An error had occurred with tuya API : ${JSON.stringify(e)}`
+            `connectDevice(): An error had occurred with tuya API on connect method : ${JSON.stringify(
+              e
+            )}`
           );
           if (shouldTryReconnect) {
-            findTimeoutHandler = setTimeout(findDevice, node.findTimeout);
+            node.log("connectDevice(): retrying the connect");
+            clearTimeout(findTimeoutHandler);
+            findTimeoutHandler = setTimeout(findDevice, node.retryTimeout);
           } else {
-            node.log("not retrying the find as shouldTryReconnect = false");
+            node.log(
+              "connectDevice(): not retrying the find as shouldTryReconnect = false"
+            );
           }
         });
       } else {
-        node.log("already connected. skippig the connect call");
+        node.log(
+          "connectDevice() : already connected. skippig the connect call"
+        );
         setStatusConnected();
       }
     };
     let findDevice = () => {
       setStatusConnecting();
-      node.log("Initiating the find command");
+      node.log("findDevice(): Initiating the find command");
       tuyaDevice
         .find({
           timeout: parseInt(node.findTimeout / 1000),
         })
         .then(() => {
+          node.log("findDevice(): Found device, going to connect");
           // Connect to device
           connectDevice();
         })
@@ -372,10 +383,12 @@ module.exports = function (RED) {
             },
           });
           if (shouldTryReconnect) {
-            node.log("Cannot find the device, re-trying...");
+            node.log("findDevice(): Cannot find the device, re-trying...");
             findTimeoutHandler = setTimeout(findDevice, node.retryTimeout);
           } else {
-            node.log("not retrying the find as shouldTryReconnect = false");
+            node.log(
+              "findDevice(): not retrying the find as shouldTryReconnect = false"
+            );
           }
         });
     };
@@ -385,6 +398,7 @@ module.exports = function (RED) {
       startComm();
     } else {
       node.log("Auto start probe is disabled ");
+      // If we dont use timeout , state will not be emitted,
       setTimeout(() => {
         setStatusDisconnected();
       }, 1000);

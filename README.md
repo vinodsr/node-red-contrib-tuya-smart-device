@@ -17,11 +17,10 @@ Fork from https://github.com/vinodsr/node-red-contrib-tuya-smart-device to test 
 <ol> <li> User reference configuration: 20+ `node-red-contrib-tuya-smart-device` in the same flow, some devices unconnected, some devices PUSHing data, some devices POLLed (REFRESH/GET) every 5 sec: CPU load and bandwidth must be minimized!
 <li> Consequential guidelines, from the "node-red-contrib-tuya-smart-device user" point of view:
 <ol type='a'> <li> Functional implementation: as described by the following 'expected behavior' notes.
- <li> Anonymized log, to allow simple sharing.
- <li> Log console messages: minimal, to reduce the CPU load. Only RECOVERABLE misuse WARNINGs, the default is Silent Ignore. (so the log can be of help in fine tuning the app).
- <li> detailed console trace, for the node troubleshooting,  in debug mode.
- <li> STATE ERROR msg: only in case of UNRECOVERABLE ERROR, a misuse that MUST be correct in the desig phase. In production the node MUST run without ERROR msg.
-</ol></ol>
+<li> STATE ERROR msg: on `debug pad`, using node.error(), only in case of UNRECOVERABLE ERROR, a misuse that MUST be correct in the desig phase. In production the node MUST run without ERROR msg.
+<li> WARNING: Logs messages to console: minimal, to reduce the CPU load. Only basic INFO and RECOVERABLE misuse WARNINGs, the default is Silent Ignore. (so the log can be of help in fine tuning the app). Using `node.log("..")`. In production the node CAN run without WARNING msg. Anonymized.
+<li> TRACE, for node debug, at any function entry, with params, uses debug(). not anonymized.
+ </ol></ol>
 
 **TEST flow** used:
 ![](https://github.com/msillano/tuyaDAEMON/blob/main/pics/ScreenShot_20210609163905.png?raw=true), see file: []()

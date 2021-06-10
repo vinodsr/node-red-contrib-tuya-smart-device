@@ -8,13 +8,17 @@ A node-red module which helps you to connect to any tuya device.
 
 Fork from https://github.com/vinodsr/node-red-contrib-tuya-smart-device to test more devices and to standardiuze the behavior.
 
+**Versions**
+- node-red-contrib-tuya-smart-device ver. 4.1.1
+- tuyAPI ver. 7.2.0
+
 ### General criteria 
 
-<ol> <li> User reference configuration: 20+ `node-red-contrib-tuya-smart-device` in the same flow, some devices unconnected, some devices PUSHing data, some devices POLLed (REFRESH/GET) every 5 sec.
+<ol> <li> User reference configuration: 20+ `node-red-contrib-tuya-smart-device` in the same flow, some devices unconnected, some devices PUSHing data, some devices POLLed (REFRESH/GET) every 5 sec: CPU load and bandwidth must be minimized!
 <li> Consequential guidelines, from the "node-red-contrib-tuya-smart-device user" point of view:
 <ol type='a'> <li> Functional implementation: as described by the following 'expected behavior' notes.
  <li> Anonymized log, to allow simple sharing.
- <li> Log console messages: minimal, to reduce the CPU load. Only RECOVERABLE misuse WARNINGs, the default is Silent Ignore. (so log can be a help in fine tuning the app).
+ <li> Log console messages: minimal, to reduce the CPU load. Only RECOVERABLE misuse WARNINGs, the default is Silent Ignore. (so the log can be of help in fine tuning the app).
  <li> detailed console trace, for the node troubleshooting,  in debug mode.
  <li> STATE ERROR msg: only in case of UNRECOVERABLE ERROR, a misuse that MUST be correct in the desig phase. In production the node MUST run without ERROR msg.
 </ol></ol>

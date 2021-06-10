@@ -40,7 +40,7 @@ note:
   **The expected behavior is not provided by ANY device because the 'tuyAPI' definitions are equivocal, and the tuyAPI implementation is not consistent with the definitions.**
   The RULES I found on all my devices are, see [ISSUE#469](https://github.com/codetheweb/tuyapi/issues/469#issue-891834622):
 
->  - The REFRESH causes an immediate re-sampling and all data are re-calculated.
+>  - The REFRESH causes an immediate re-sampling and ALL data are re-calculated.
 >  - In output are sent ALWAYS only the CHANGED dps (not all (SCHEMA) or requestedDPS !).
 >  - REFRESH, REFRESH SCHEMA, REFRESH DPS works ALL the same way: i.e. exists only one REFRESH function (at least, with the implementation under the test of tuyAPI ver. 7.1.0 ).
   

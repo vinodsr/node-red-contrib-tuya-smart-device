@@ -1,5 +1,13 @@
 # Changelog
 
+## 4.1.1
+
+- Fix retry timeout not set via command
+- Fix state change issues with the state output of the node.
+- Handled the TuyAPI unhandled exception( Thanks to @msillano)
+- Check for connection before sending message
+- Added troubleshooting section in README
+
 ## 4.1.0
 
 - Added CONTROL commands as input (CONNECT, DISCONNECT, RECONNECT)

@@ -14,8 +14,8 @@ Fork from https://github.com/vinodsr/node-red-contrib-tuya-smart-device to test 
 <li> Consequential guidelines, from the "node-red-contrib-tuya-smart-device user" point of view:
 <ol type='a'> <li> Functional implementation: as described by the following 'expected behavior' notes.
  <li> Anonymized log, to allow simple sharing.
- <li> Log console messages: minimal, to reduce the CPU load. minimal trace allowed, and RECOVERABLE misuse WARNINGs, the default is Silent Ignore. (so log can be a help in fine tuning the app).
- <li> detailed console trace, for troubleshooting,  in debug mode.
+ <li> Log console messages: minimal, to reduce the CPU load. Only RECOVERABLE misuse WARNINGs, the default is Silent Ignore. (so log can be a help in fine tuning the app).
+ <li> detailed console trace, for the node troubleshooting,  in debug mode.
  <li> STATE ERROR msg: only in case of UNRECOVERABLE ERROR, a misuse that MUST be correct in the desig phase. In production the node MUST run without ERROR msg.
 </ol></ol>
 

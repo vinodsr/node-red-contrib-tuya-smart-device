@@ -13,7 +13,7 @@ const CLIENT_STATUS = {
 // ms 10/06 I found the default 1000 too short and this avoids magic numbers.
 const DEFAULTTIMEUT = 2000;
 const MINIMALTIMEOUT = 100;
-SE
+
 // ms 11/06 for errors filtering
 const TUYAPIERRORTIMEOUT = "Error: connection timed out";
 const TUYAPIERRORFIND = "Error: find() timed out.";

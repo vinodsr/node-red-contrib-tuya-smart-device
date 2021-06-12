@@ -63,6 +63,8 @@ note:
 >  - REFRESH, REFRESH SCHEMA, REFRESH DPS: ALL works the SAME WAY: i.e. there is only one REFRESH function (at least, with the implementation under test: tuyAPI ver. 7.1.0 ).
   
   In applications I only use a vanilla REFRESH, applying the above rules, and it works as expected with all my devices.
+  
+  _note: Usually after a REFRESH a device sends only the changed values. So it is possible to send a REFRESH and do not get any value._
  
  ---------------------------------------------
  ### Expected behavior: at STARTUP, device _ON_, Disable auto-connect on start: _false_

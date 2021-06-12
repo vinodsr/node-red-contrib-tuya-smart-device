@@ -17,9 +17,12 @@ Fork from https://github.com/vinodsr/node-red-contrib-tuya-smart-device to test 
 <ol> <li> User reference configuration: 20+ `node-red-contrib-tuya-smart-device` in the same flow, some devices unconnected, some devices PUSHing data, some devices POLLed (REFRESH/GET) every 5 sec: CPU load and bandwidth must be minimized!
 <li> Consequential guidelines, from the "node-red-contrib-tuya-smart-device user" point of view:
 <ol type='a'> <li> Functional implementation: as described by the following 'expected behavior' notes.
-<li> STATE ERROR msg: on `debug pad`, using node.error(), only in case of UNRECOVERABLE ERROR, a misuse that MUST be correct in the desig phase. In production the node MUST run without ERROR msg.
-<li> WARNING: Logs messages to console: minimal, to reduce the CPU load. Only basic INFO and RECOVERABLE misuse WARNINGs, the default is Silent Ignore. (so the log can be of help in fine tuning the app). Using `node.log("..")`. In production the node CAN run without WARNING msg. Anonymized.
-<li> TRACE, for node debug, at any function entry, with params, uses debug(). not anonymized.
+<li> Test and ERROR controls: 3 levels ERROR, WARNING, TRACE
+<li> ERROR level, sent via STATE msg (optional also on `debug pad`), only in case of UNRECOVERABLE ERROR, a misuse that MUST be correct in the desig phase.
+	In production the node MUST run without ERROR msg.  
+<li> WARNING: Logs messages to console: minimal, to reduce the CPU load. Only basic INFO and RECOVERABLE misuse WARNINGs, the default is Silent Ignore. So the log can be of help in fine tuning the apps. Uses `node.log("..")`. In production the node CAN run without WARNING msg. Anonymized.
+<li> TRACE (debug), for the node debug, at any function entry, with params, using the 'debug' module.
+<li> note: tuyaAPI errors are filtered and processed as ERROR, WARNING, or ignored. In any case the tuyAPI errors are sent to TRACE unmodified. 
  </ol></ol>
 
 **TEST flow** used:
@@ -72,10 +75,6 @@ msg.payload : Object
 
 9/6/2021, 13:20:43node: Node State
 msg.payload : Object
-{ state: "ERROR", context: object }
-
-9/6/2021, 13:20:43node: Node State
-msg.payload : Object
 { state: "DISCONNECTED" }
 
 ..... more
@@ -91,8 +90,7 @@ msg.payload : Object
 note:
 - The CONNECTING-ERROR-DISCONNECTED cycle can be repeated more times: it is OK, can be 
      a consequence of too small _findTimeout_ value.
-- In this case, the ERROR msg is superfluous: enough to ignore it in apps.
-- Required: the initial 'DISCONNECTED' and the final 'CONNECTED'.
+- Required: the initial 'DISCONNECTED'|'CONNECTING' and the final 'CONNECTED'.
 -------------------------------------------------------------------------
    
   ### Expected behavior: at STARTUP, device _ON_, Disable auto-connect on start: _true_
@@ -133,13 +131,6 @@ msg.payload : Object
 9/6/2021, 12:51:54node: Node State
 msg.payload : Object
 { state: "CONNECTING" }
-
-9/6/2021, 12:52:14node: Node State
-msg.payload : Object
-state: "ERROR"
-    context: object
-       message: "Error: find() timed out. Is the device powered on and the ID or IP correct?"
-       device: "Wifi plug"
 	   
 9/6/2021, 12:52:14node: Node State
 msg.payload : Object
@@ -148,27 +139,18 @@ msg.payload : Object
 9/6/2021, 12:52:24node: Node State
 msg.payload : Object
 { state: "CONNECTING" }
-
-9/6/2021, 12:52:44node: Node State
-msg.payload : Object
-state: "ERROR"
-   context: object
-      message: "Error: find() timed out. Is the device powered on and the ID or IP correct?"
-      device: "Wifi plug"
 ......  more
 
 ````
 note:
-- Never-ending loop CONNECTING-ERROR-DISCONNECTED.
-- In this case, the ERROR msg is superfluous: enough to ignore it in apps.
-	- Between CONNECTING-ERROR, 20s == _findTimeout_
-	- Between ERROR-DISCONNECTED  0s
-	- Between DISCONNECTED-CONNECTING, 10s == _retryTimeout_
+- Never-ending polling loop CONNECTING-DISCONNECTED.
+- Between CONNECTING-DISCONNECTED, 20s == _findTimeout_
+- Between DISCONNECTED-CONNECTING, 10s == _retryTimeout_
 	
 Required: 	
-   - the initial 'DISCONNECTED'.
-   - Infinite loop CONNECTING-(ERROR)-DISCONNECTED.
-   - No `node.error` messages.
+   - the initial 'DISCONNECTED'|'CNNECTING'
+   - Infinite loop CONNECTING-DISCONNECTED.
+   - No `error` messages.
 	 
 ---------------------------------------------	 
  ### Expected behavior:  device _OFF => ON_
@@ -181,13 +163,6 @@ msg.payload : Object
 9/6/2021, 13:37:58node: Node State
 msg.payload : Object
 { state: "CONNECTING" }
-
-9/6/2021, 13:38:03node: Node State
-msg.payload : Object
-state: "ERROR"
-   context: object
-      message: "Error: find() timed out. Is the device powered on and the ID or IP correct?"
-      device: "Wifi plug"
 	  
 9/6/2021, 13:38:03node: Node State
 msg.payload : Object
@@ -246,13 +221,12 @@ msg.payload : Object
 ````
 note:
 - Never-ending loop CONNECTING-DISCONNECTED.
-- difference from STARTUP-OFF case: the STATE ERROR message is now missed: no problem, it is superfluous.
-	- Between CONNECTING-DISCONNECTED  5s ==  _findTimeout_
-	- Between DISCONNECTED-CONNECTING, 10s == _retryTimeout_
+- Between CONNECTING-DISCONNECTED  5s ==  _findTimeout_
+- Between DISCONNECTED-CONNECTING, 10s == _retryTimeout_
 
 Required:
-  - Infinite loop CONNECTING-(ERROR)-DISCONNECTED.
-  - No 'node.error' messages.
+  - Infinite loop CONNECTING-DISCONNECTED.
+  - No 'error' messages.
 
 ---------------------------------------------	 
  ### Expected behavior:  CONNECT/DISCONNECT/RECONNECT CONTROL
@@ -353,7 +327,7 @@ msg.payload : Object
 // OK, done: connected
 ````
 Required:
-  - CONNECT; connects the device, if DISCONNECTED, else does nothing.
+ - CONNECT; connects the device, if DISCONNECTED, else does nothing.
  - DISCONNECT; disconnects the device, if CONNECTED, else does nothing.
  - RECONNECT: disconnects the device, if CONNECTED, then (re)connects them.
 
@@ -438,6 +412,7 @@ object
 //  OK, as expected
 ````
 note:
--  The unusual behavior of the 'Wifi Plug' in the case 'GET 1' was  [known](https://github.com/msillano/tuyaDAEMON/blob/main/devices/Wifi_Plug/device_Wifi_Plug.pdf).
+- formal errors in SET/GET/SCHEMA ere (possibilty) detetected and sent as WARNING to LOG. To skip the fake commnds prevents fom strange device behaviors ([see final note](https://github.com/msillano/tuyaDAEMON/tree/main/tuyaDAEMON#tuya-devices-capabilities-as-currently-known)). 
+- The unusual behavior of the 'Wifi Plug' in the case 'GET 1' was  [known](https://github.com/msillano/tuyaDAEMON/blob/main/devices/Wifi_Plug/device_Wifi_Plug.pdf).
 - The SET/GET/SCHEMA device behavior is complicated by the presence of some fallbacks on `tuyAPI` implementation, so an unexpected result can become from the devices but also from tuyAPI.
 - As `tuyAPI` users, we must accept the `tuyAPI + device` as a unique black-block, ready to accept possibles differences in the behavior for every new version.

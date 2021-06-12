@@ -26,7 +26,9 @@ Fork from https://github.com/vinodsr/node-red-contrib-tuya-smart-device to test 
  </ol></ol>
 
 **TEST flow** used:
-![](https://github.com/msillano/tuyaDAEMON/blob/main/pics/ScreenShot_20210609163905.png?raw=true), see file: []()
+![](https://github.com/msillano/tuyaDAEMON/blob/main/pics/ScreenShot_20210609163905.png?raw=true)
+
+see file: [test-4.1.json](https://github.com/msillano/node-red-contrib-tuya-smart-device/blob/master/test-4.1.json).
 
 **Devices** tested: [Wifi Plug](https://github.com/msillano/tuyaDAEMON/blob/main/devices/Wifi_Plug/device_Wifi_Plug.pdf): passed, [Power Strip](https://github.com/msillano/tuyaDAEMON/blob/main/devices/power_strip/device_power_strip.pdf): passed, [LED 700ml Humidifier](https://github.com/msillano/tuyaDAEMON/blob/main/devices/LED_700ml_Humidifier/device_LED_700ml_Humidifier.pdf): passed.
 

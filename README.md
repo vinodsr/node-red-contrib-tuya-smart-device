@@ -17,13 +17,13 @@ Fork from https://github.com/vinodsr/node-red-contrib-tuya-smart-device to test 
 <ol> <li> User reference configuration: 20+ `node-red-contrib-tuya-smart-device` in the same flow, some devices unconnected, some devices PUSHing data, some devices POLLed (REFRESH/GET) every 5 sec: CPU load and bandwidth must be minimized!
 <li> Consequential guidelines, from the "node-red-contrib-tuya-smart-device user" point of view:
 <ol type='a'> <li> Functional implementation: as described by the following 'expected behavior' notes.
-<li> Test and ERROR management. 3 levels ERROR, WARNING, TRACE
-<li> ERROR level, sent via STATE msg (optional also on `debug pad`), only in case of UNRECOVERABLE ERROR, a misuse that MUST be correct in the desig phase.
+<li> debug management: ERROR, WARNING, TRACE behavior:
+<ul><li> ERROR level, sent via STATE msg (optional also on `debug pad`), only in case of UNRECOVERABLE ERROR, a misuse that MUST be correct in the design phase.
 	In production the node MUST run without ERROR msg.  
-<li> WARNING: Logs messages to console: minimal, to reduce the CPU load. Only basic INFO and RECOVERABLE misuse WARNINGs, the default is Silent Ignore. So the log can be of help in fine tuning the apps, ad small in production. Uses `node.log("..")`. Anonymized.
+<li> WARNING: Logs messages to console: minimal, to reduce the CPU load. Only basic INFO and RECOVERABLE misuse WARNINGs, the default is Silent Ignore. So the log can be of help in fine tuning the apps, ad still small in production. Uses `node.log("..")`. Anonymized.
 <li> TRACE (debug), for the node debug, at any function entry, with params, using the 'debug' module.
 <li> note: tuyaAPI errors are filtered and processed as ERROR, WARNING, or ignored. In any case the tuyAPI errors are sent to TRACE unmodified. 
- </ol></ol>
+</ul></ol></ol>
 
 **TEST flow** used:
 ![](https://github.com/msillano/tuyaDAEMON/blob/main/pics/ScreenShot_20210609163905.png?raw=true)
@@ -58,8 +58,8 @@ note:
   **The expected behavior is not provided by ANY device because the 'tuyAPI' definitions are equivocal, and the implementation of tuyAPI is not consistent with the definitions.**
   The RULES I found on all my devices are, see [ISSUE#469](https://github.com/codetheweb/tuyapi/issues/469#issue-891834622):
 
->  - REFRESH causes immediate resampling: ALL data is recalculated.
->  - ONLY the CHANGED DPS are sent ALWAYS in output (NOT all DPS (SCHEMA) or the DPS in the `requestedDPS`  array!): i.e. conseguential with Tuya's aim to reduce the bandwidth.
+>  - REFRESH causes an immediate resampling: ALL data is recalculated.
+>  - ONLY the CHANGED DPS are sent ALWAYS in output (NOT all DPS (SCHEMA) or the DPS in the `requestedDPS`  array!). This is conseguential with Tuya's aim to reduce the bandwidth.
 >  - REFRESH, REFRESH SCHEMA, REFRESH DPS: ALL works the SAME WAY: i.e. there is only one REFRESH function (at least, with the implementation under test: tuyAPI ver. 7.1.0 ).
   
   In applications I only use a vanilla REFRESH, applying the above rules, and it works as expected with all my devices.
@@ -329,9 +329,9 @@ msg.payload : Object
 // OK, done: connected
 ````
 Required:
- - CONNECT; connects the device, if DISCONNECTED, else does nothing.
- - DISCONNECT; disconnects the device, if CONNECTED, else does nothing.
- - RECONNECT: disconnects the device, if CONNECTED, then (re)connects them.
+  - DISCONNECT; suspend (STANDBY) the device on the DISCONNECTED state, regardless of CONNECT/DISCONNECT: no auto-reconnect, waiting CONTROL CONNECT
+  - CONNECT; connects the device, if in STANDBY or DISCONNECTED, else does nothing.
+  - RECONNECT: disconnects the device, if CONNECTED, then (re)connects them.
 
 ### Expected behavior: SET/GET/SCHEMA
 

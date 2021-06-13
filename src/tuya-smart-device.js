@@ -1,6 +1,6 @@
 const TuyaDevice = require("tuyapi");
 const packageInfo = require("../package.json");
-// ms 10/06, to get clean debug: SET DEBUG = tuya-smart-device
+// ms 10/06, to get clean debug: SET DEBUG = tuya-smart-device (TuyAPI)
 const debug = require('debug')('tuya-smart-device');
 
 const CLIENT_STATUS = {

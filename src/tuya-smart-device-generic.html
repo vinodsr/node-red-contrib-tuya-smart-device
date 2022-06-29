@@ -1,158 +1,165 @@
 <script type="text/javascript">
-    RED.nodes.registerType('tuya-smart-device-generic', {
-        category: 'smarthome',
-        color: '#C7E9C0',
-        defaults: {
-            name: { value: "", required: false },
-            eventMode: { value: 'event-both', required: true }
-        },
-        inputs: 1,
-        outputs: 1,
-        icon: "bridge.svg",
-        label: function () {
-            return this.name || "tuya smart device generic";
-        },
-        oneditprepare: function () {
-            let eventMode = this.eventMode || 'event-both'
-            $("select[name='node-input-eventMode']").find(`option[value='${eventMode}']`).attr("selected", true);
-        }
-    });
+  RED.nodes.registerType('tuya-smart-device-generic', {
+    category: 'smarthome',
+    color: '#C7E9C0',
+    defaults: {
+      name: { value: '', required: false },
+      eventMode: { value: 'event-both', required: true },
+    },
+    inputs: 1,
+    outputs: 1,
+    icon: 'bridge.svg',
+    paletteLabel: 'tuya smart device hub',
+    label: function () {
+      return this.name || 'tuya smart device hub';
+    },
+    oneditprepare: function () {
+      let eventMode = this.eventMode || 'event-both';
+      $("select[name='node-input-eventMode']")
+        .find(`option[value='${eventMode}']`)
+        .attr('selected', true);
+    },
+  });
 </script>
 
 <script type="text/html" data-template-name="tuya-smart-device-generic">
-    <div>
-       Pass the device key and virual id as payload paramters. Refer help for more details.
-       <hr/>
-       <div class="form-row">
-        <label style="width:100%" for="node-input-name" ><i class="fa fa-id-card-o"></i> Name</label>
-        <input type="text" id="node-input-name" placeholder="Name">
+  <div>
+    Pass the device key and virual id as payload paramters. Refer help for more
+    details.
+    <hr />
+    <div class="form-row">
+      <label style="width:100%" for="node-input-name"
+        ><i class="fa fa-id-card-o"></i> Name</label
+      >
+      <input type="text" id="node-input-name" placeholder="Name" />
     </div>
     <div class="form-row">
-        <label style="width:100%" for="node-input-subscribeMode"><i class="fa fa-wrench"></i> Listen to tuya events</label>
+      <label style="width:100%" for="node-input-subscribeMode"
+        ><i class="fa fa-wrench"></i> Listen to tuya events</label
+      >
     </div>
     <div class="form-row">
-        <select name="node-input-eventMode" id="node-input-eventMode">
-            <option value="event-data">Data Event</option>
-            <option value="event-dp-refresh">DP-Refresh Event</option>
-            <option value="event-both">Both Events</option>
-        </select>
+      <select name="node-input-eventMode" id="node-input-eventMode">
+        <option value="event-data">Data Event</option>
+        <option value="event-dp-refresh">DP-Refresh Event</option>
+        <option value="event-both">Both Events</option>
+      </select>
     </div>
-    </div>
+  </div>
 </script>
 
 <script type="text/html" data-help-name="tuya-smart-device-generic">
-    <p>This node will help you to send SET command any tuya smart device based on the payload</p>
+  <p>This node will help you to send SET command any tuya smart device based on the payload</p>
 
-    <h3>Details</h3>
-    <p>Instructions for getting the device id is available <a href="https://github.com/codetheweb/tuyapi/blob/master/docs/SETUP.md">here</a></p>
-   
-    <code>You will get the device id and the key once you run the wizard program as per the instructiions</code>
-    
-    
-    <p>The node takes the input which needs to be sent to the device and outouts the message if the state of the device changes.</p>
-        
-    Example: 
-    <code>
-        {
-            "deviceVirtualId": "<virtualid>",
-            "deviceIp": "<deviceIP>",
-            "deviceKey": "<devicekey>",
-            "deviceName": "<name of the device>",
-            "operation": "SET", // optional default : SET
-            "payload": {
-                "dps": 1,
-                "set": true
-            },
-            "version": "<tuya protocol version>(Optional)"
-        }
-    </code>
-    Don't pass IP and Key same time.
-    <h3>Input</h3>
-    <h4>payload</h4>
-    <dl class="message-properties">
-        <dt class="">deviceVirtualId <span class="property-type">String</span></dt>
-        <dd>Virtual ID of the device</dd>
-        <dt class="">deviceIp <span class="property-type">String</span></dt>
-        <dd>IP address of the device(use static IP)</dd>
-        <dt class="">deviceKey <span class="property-type">String</span></dt>
-        <dd>The device key</dd>
-        <dt class="">version (optional) <span class="property-type">Number</span></dt>
-        <dd>Tuya protocol version (default : 3.1)</dd>
-        <dt class="">deviceName <span class="property-type">String</span></dt>
-        <dd>Name of the device for reference only. The output will have this name.</dd>
-        <dt class="optional">operation
-            <span class="property-type">SET/GET</span>
-        </dt>
-        <dd> 
-            <p>SET: Use SET the run a set operation in the device
-            <a href="https://codetheweb.github.io/tuyapi/index.html#tuyadeviceset">SET documentation</a> </p>
-            Any output of the operation will be triggered on the output of the node.
-        </dd>
-        <dt class="">payload <span class="property-type">Object</span></dt>
-        <dd>The payload that should be passed to the device.
-        </dd>
-        Payload properties
-            <dl class="message-properties">
-            <dt class="property-type">dps <span class="property-type">Number</span></dt>
-        <dd>The dps index you want to update or query</dd>
-        <dt class="property-type">set <span class="property-type">Any</span></dt>
-        <dd>The value you want to set for the dps index</dd>
-        <dt class="optional property-type">multiple <span class="property-type">Boolean</span></dt>
-        <dd>Incase you want to send multiple dps index. Use the data argument in that case.</dd>
-        <dt class="optional property-type">data <span class="property-type">Object</span></dt>
-        <dd>Object of the below format with multiple dps index and the values
-            <code>
-                {
-                    "deviceVirtualId": "<virtualid>",
-                    "deviceKey": "<key of the device>",
-                    "deviceIp": "<deviceIP>",
-                    "version":"<tuya protocol version",
-                    "deviceName": "<device name>",
-                    "operation": "SET", // optional by default SET
-                    "payload":{
-                        "multiple": true,
-                        "data": {
-                            "20": true,
-                            "24": "00e203e803de"
-                        }
-                    }
-                }
-                </code>
-        </dd>
-    </dl>
-        
-    </dl>
+  <h3>Details</h3>
+  <p>Instructions for getting the device id is available <a href="https://github.com/codetheweb/tuyapi/blob/master/docs/SETUP.md">here</a></p>
+
+  <code>You will get the device id and the key once you run the wizard program as per the instructiions</code>
 
 
-    <h3>Output</h3>
-    <dl class="message-properties">
-        <dt class="">deviceVirtualId
-            <span class="property-type">String</span>
-        </dt>
-        <dd> 
-           Device Virtual ID
-        </dd>
-        <dt class="">deviceKey
-            <span class="property-type">String</span>
-        </dt>
-        <dd> 
-           Device Key ID
-        </dd>
-        <dt class="">deviceName <span class="property-type">String</span></dt>
-        <dd>Device Name</dd>
-        <dt class="optional">data <span class="property-type">Object</span></dt>
-        <dd>The response from the Tuya device. Sample response is shown below.
-            <code>
-                data: {
-                   dps : {
-                       1 : false
-                   },
-                   t: 1600955043 
-                },
-                deviceId: "39390e7421ia",
-                deviceName: "Monitor Plug"
-                </code>
-        </dd>
-    </dl>
+  <p>The node takes the input which needs to be sent to the device and outouts the message if the state of the device changes.</p>
 
+  Example:
+  <code>
+      {
+          "deviceVirtualId": "<virtualid>",
+          "deviceIp": "<deviceIP>",
+          "deviceKey": "<devicekey>",
+          "deviceName": "<name of the device>",
+          "operation": "SET", // optional default : SET
+          "payload": {
+              "dps": 1,
+              "set": true
+          },
+          "version": "<tuya protocol version>(Optional)"
+      }
+  </code>
+  Don't pass IP and Key same time.
+  <h3>Input</h3>
+  <h4>payload</h4>
+  <dl class="message-properties">
+      <dt class="">deviceVirtualId <span class="property-type">String</span></dt>
+      <dd>Virtual ID of the device</dd>
+      <dt class="">deviceIp <span class="property-type">String</span></dt>
+      <dd>IP address of the device(use static IP)</dd>
+      <dt class="">deviceKey <span class="property-type">String</span></dt>
+      <dd>The device key</dd>
+      <dt class="">version (optional) <span class="property-type">Number</span></dt>
+      <dd>Tuya protocol version (default : 3.1)</dd>
+      <dt class="">deviceName <span class="property-type">String</span></dt>
+      <dd>Name of the device for reference only. The output will have this name.</dd>
+      <dt class="optional">operation
+          <span class="property-type">SET/GET</span>
+      </dt>
+      <dd>
+          <p>SET: Use SET the run a set operation in the device
+          <a href="https://codetheweb.github.io/tuyapi/index.html#tuyadeviceset">SET documentation</a> </p>
+          Any output of the operation will be triggered on the output of the node.
+      </dd>
+      <dt class="">payload <span class="property-type">Object</span></dt>
+      <dd>The payload that should be passed to the device.
+      </dd>
+      Payload properties
+          <dl class="message-properties">
+          <dt class="property-type">dps <span class="property-type">Number</span></dt>
+      <dd>The dps index you want to update or query</dd>
+      <dt class="property-type">set <span class="property-type">Any</span></dt>
+      <dd>The value you want to set for the dps index</dd>
+      <dt class="optional property-type">multiple <span class="property-type">Boolean</span></dt>
+      <dd>Incase you want to send multiple dps index. Use the data argument in that case.</dd>
+      <dt class="optional property-type">data <span class="property-type">Object</span></dt>
+      <dd>Object of the below format with multiple dps index and the values
+          <code>
+              {
+                  "deviceVirtualId": "<virtualid>",
+                  "deviceKey": "<key of the device>",
+                  "deviceIp": "<deviceIP>",
+                  "version":"<tuya protocol version",
+                  "deviceName": "<device name>",
+                  "operation": "SET", // optional by default SET
+                  "payload":{
+                      "multiple": true,
+                      "data": {
+                          "20": true,
+                          "24": "00e203e803de"
+                      }
+                  }
+              }
+              </code>
+      </dd>
+  </dl>
+
+  </dl>
+
+
+  <h3>Output</h3>
+  <dl class="message-properties">
+      <dt class="">deviceVirtualId
+          <span class="property-type">String</span>
+      </dt>
+      <dd>
+         Device Virtual ID
+      </dd>
+      <dt class="">deviceKey
+          <span class="property-type">String</span>
+      </dt>
+      <dd>
+         Device Key ID
+      </dd>
+      <dt class="">deviceName <span class="property-type">String</span></dt>
+      <dd>Device Name</dd>
+      <dt class="optional">data <span class="property-type">Object</span></dt>
+      <dd>The response from the Tuya device. Sample response is shown below.
+          <code>
+              data: {
+                 dps : {
+                     1 : false
+                 },
+                 t: 1600955043
+              },
+              deviceId: "39390e7421ia",
+              deviceName: "Monitor Plug"
+              </code>
+      </dd>
+  </dl>
 </script>

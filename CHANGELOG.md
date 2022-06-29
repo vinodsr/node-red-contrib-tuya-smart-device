@@ -1,5 +1,13 @@
 # Changelog
 
+## 5.0.0
+
+- Updated TuyaAPI to `7.3.0`
+- Added support to store device Id and device Key as credentials [#77](https://github.com/vinodsr/node-red-contrib-tuya-smart-device/issues/77)
+- Changed the default find timeout value to 10 seconds
+- Renamed `tuya smart device generic` node to `tuya smart device hub`
+  > Thanks to [foxylion](https://github.com/foxylion) for suggesting the crendentials feature
+
 ## 4.1.1
 
 - Fix retry timeout not set via command

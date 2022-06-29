@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-tuya-smart-device",
-  "version": "4.1.1",
+  "version": "5.0.0",
   "description": "A node-red module to interact with the tuya smart devices",
   "repository": "https://github.com/vinodsr/node-red-contrib-tuya-smart-device",
   "main": "index.js",
@@ -9,6 +9,7 @@
   },
   "author": "Vinod S R",
   "license": "MIT",
+  "homepage": "https://github.com/vinodsr/node-red-contrib-tuya-smart-device",
   "keywords": [
     "node-red"
   ],
@@ -19,6 +20,6 @@
     }
   },
   "dependencies": {
-    "tuyapi": "7.1.0"
+    "tuyapi": "7.3.0"
   }
 }

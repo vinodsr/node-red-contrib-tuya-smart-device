@@ -1,5 +1,6 @@
 # node-red-contrib-tuya-smart-device
 
+![npm](https://img.shields.io/npm/v/node-red-contrib-tuya-smart-device)
 ![NPM](https://img.shields.io/npm/dm/node-red-contrib-tuya-smart-device)
 ![Build and Publish package](https://github.com/vinodsr/node-red-contrib-tuya-smart-device/workflows/Build%20and%20Publish%20package/badge.svg)
 ![License](https://img.shields.io/github/license/vinodsr/node-red-contrib-tuya-smart-device)

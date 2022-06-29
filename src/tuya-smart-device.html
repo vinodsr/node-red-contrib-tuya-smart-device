@@ -1,27 +1,55 @@
 <script type="text/javascript">
-  RED.nodes.registerType("tuya-smart-device", {
-    category: "smarthome",
-    color: "#C7E9C0",
+  RED.nodes.registerType('tuya-smart-device', {
+    category: 'smarthome',
+    color: '#C7E9C0',
+    credentials: {
+      secretConfig: {
+        value: '',
+      },
+    },
     defaults: {
-      deviceName: { value: "", required: true },
+      deviceName: { value: '', required: true },
       disableAutoStart: { value: false, required: true },
       deviceId: {
-        value: "",
+        value: '',
         required: false,
         validate: function (v) {
-          return $("#node-input-deviceIp").val() &&
-            $("#node-input-deviceIp").val().trim().length == 0
-            ? v.trim().length > 0
+          let value = v;
+          const storeAsCreds = this.storeAsCreds || false;
+          if (storeAsCreds) {
+            const secretConfig = this.credentials.secretConfig || '{}';
+            const secret = JSON.parse(secretConfig);
+            value = secret.deviceId;
+          }
+          return typeof this.deviceIp === 'string' &&
+            this.deviceIp.trim().length == 0
+            ? value.trim().length > 0
             : true;
         },
       },
-      deviceKey: { value: "", required: true },
-      deviceIp: {
-        value: "",
+      deviceKey: {
+        value: '',
         required: false,
         validate: function (v) {
-          return $("#node-input-deviceId").val() &&
-            $("#node-input-deviceId").val().trim().length == 0
+          let value = v;
+          const storeAsCreds = this.storeAsCreds || false;
+          if (storeAsCreds) {
+            const secretConfig = this.credentials.secretConfig || '{}';
+            const secret = JSON.parse(secretConfig);
+            value = secret.deviceKey;
+          }
+          return value.trim().length > 0;
+        },
+      },
+      storeAsCreds: {
+        value: false,
+      },
+      deviceIp: {
+        value: '',
+        required: false,
+        validate: function (v) {
+          return $('#node-input-deviceId').val() &&
+            $('#node-input-deviceId').val().trim().length == 0
             ? v.trim().length > 0
             : true;
         },
@@ -32,40 +60,71 @@
         validate: RED.validators.number(),
       },
       findTimeout: {
-        value: 1000,
+        value: 10000,
         required: true,
         validate: RED.validators.number(),
       },
-      tuyaVersion: { value: "3.1", required: false },
-      eventMode: { value: "event-both", required: true },
+      tuyaVersion: { value: '3.1', required: false },
+      eventMode: { value: 'event-both', required: true },
     },
     inputs: 1,
     outputs: 2,
-    inputLabels: "Command for the device",
-    outputLabels: ["Data from the device", "Client State"],
-    icon: "bridge.svg",
+    inputLabels: 'Command for the device',
+    outputLabels: ['Data from the device', 'Client State'],
+    icon: 'bridge.svg',
     label: function () {
-      return this.deviceName || "tuya smart device";
+      return this.deviceName || 'tuya smart device';
     },
     oneditprepare: function () {
-      let eventMode = this.eventMode || "event-both";
+      let eventMode = this.eventMode || 'event-both';
       $("select[name='node-input-eventMode']")
         .find(`option[value='${eventMode}']`)
-        .attr("selected", true);
-      $("#node-input-findTimeout").val(this.findTimeout || 1000);
-      $("#node-input-retryTimeout").val(this.retryTimeout || 1000);
+        .attr('selected', true);
+
+      const storeAsCreds = this.storeAsCreds || false;
+      if (storeAsCreds) {
+        const secretConfig = this.credentials.secretConfig || '{}';
+        const secret = JSON.parse(secretConfig);
+        console.log('Loading config from secret');
+        $('#node-input-deviceId').val(secret.deviceId);
+        $('#node-input-deviceKey').val(secret.deviceKey);
+      }
+
+      $('#node-input-findTimeout').val(this.findTimeout || 1000);
+      $('#node-input-retryTimeout').val(this.retryTimeout || 1000);
       if (
         this.tuyaVersion == null ||
-        typeof this.tuyaVersion == "undefined" ||
+        typeof this.tuyaVersion == 'undefined' ||
         this.tuyaVersion.trim().length == 0
       ) {
-        $("#node-input-tuyaVersion").val(3.1);
+        $('#node-input-tuyaVersion').val(3.1);
+      }
+    },
+    oneditsave: function () {
+      const storeAsCreds =
+        $('#node-input-storeAsCreds').is(':checked') || false;
+      if (storeAsCreds) {
+        const secret = {
+          deviceId: $('#node-input-deviceId').val(),
+          deviceKey: $('#node-input-deviceKey').val(),
+        };
+        console.log('Saving secret');
+        $('#node-input-secretConfig').val(JSON.stringify(secret));
+        $('#node-input-deviceId').val('');
+        $('#node-input-deviceKey').val('');
+      } else {
+        $('#node-input-secretConfig').val('{}');
       }
     },
   });
 </script>
 
 <script type="text/html" data-template-name="tuya-smart-device">
+  <input
+    type="hidden"
+    id="node-input-secretConfig"
+    placeholder="Device Secret"
+  />
   <div class="form-row">
     <label style="width:100%" for="node-input-deviceName"
       ><i class="fa fa-tag"></i> Device Name</label
@@ -91,22 +150,22 @@
     />
   </div>
   <div class="form-row">
-    <label style="width:100%" for="node-input-deviceIp"
-      ><i class="fa fa-info"></i> Device IP (Static)</label
-    >
-    <input
-      type="text"
-      id="node-input-deviceIp"
-      placeholder="The ip of the device"
-    />
-  </div>
-  <div class="form-row">
     <label style="width:100%" for="node-input-deviceKey"
       ><i class="fa fa-key"></i> Device Key</label
     >
     <input type="text" id="node-input-deviceKey" placeholder="Device Key" />
   </div>
-
+  <div class="form-row">
+    <label style="width:100%" for="node-input-storeAsCreds">
+      <input
+        type="checkbox"
+        style="width: auto;"
+        id="node-input-storeAsCreds"
+      />
+      Store Device Id and Device Key as credentials (Credentials will not appear
+      in the flow export)</label
+    >
+  </div>
   <div style="color:blue">
     <i class="fa fa-question"></i>&nbsp;&nbsp;How to get the device ID and Key
     ?<a
@@ -114,6 +173,17 @@
       target="_blank"
       >Click here</a
     >
+  </div>
+  <br />
+  <div class="form-row">
+    <label style="width:100%" for="node-input-deviceIp"
+      ><i class="fa fa-info"></i> Device IP (Use Static IP)
+    </label>
+    <input
+      type="text"
+      id="node-input-deviceIp"
+      placeholder="The ip of the device"
+    />
   </div>
   <hr />
   <div class="form-row" style="font-weight: bold;">Advanced Options</div>
@@ -128,7 +198,8 @@
       Disable auto connect on start
     </label>
     <br />
-    (You have to manually issue the CONNECT CONTROL COMMAND)
+    (You have to manually issue the CONNECT CONTROL COMMAND. Refer the help
+    panel)
     <br />
   </div>
   <div class="form-row">

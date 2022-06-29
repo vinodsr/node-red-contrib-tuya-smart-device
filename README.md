@@ -10,12 +10,24 @@ A node-red module which helps you to connect to any tuya device.
 
 # Table of contents
 
+- [Features](#features)
 - [Getting Started](#getting-started)
 - [Setup](#setup)
   - [Input Format](#input-format)
   - [Output Format](#output-format)
 - [License](#license)
 - [Contributing](#contributing)
+
+# Features
+
+- Controls tuya device
+- Controls multiple device using a single node using generic node (hub node)
+- Can use device IP for communication
+- Configure retry and find intervals
+- Ability to setup Tuya Protocol Version
+- Ability to listen to both `Data` and `DP-Refresh` event
+- Can store deviceId and deviceKey as crendentials
+- Better error handling
 
 # Getting Started
 

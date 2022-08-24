@@ -15,15 +15,22 @@
         required: false,
         validate: function (v) {
           let value = v;
+          let credsOffline = false;
           const storeAsCreds = this.storeAsCreds || false;
           if (storeAsCreds) {
-            const secretConfig = this.credentials.secretConfig || '{}';
-            const secret = JSON.parse(secretConfig);
-            value = secret.deviceId;
+            if (typeof this.credentials !== 'object') {
+              credsOffline = true;
+            } else {
+              const secretConfig = this.credentials.secretConfig || '{}';
+              const secret = JSON.parse(secretConfig);
+              value = secret.deviceId;
+            }
           }
           return typeof this.deviceIp === 'string' &&
             this.deviceIp.trim().length == 0
-            ? value.trim().length > 0
+            ? storeAsCreds && credsOffline
+              ? true
+              : value.trim().length > 0
             : true;
         },
       },
@@ -32,13 +39,18 @@
         required: false,
         validate: function (v) {
           let value = v;
+          let credsOffline = false;
           const storeAsCreds = this.storeAsCreds || false;
           if (storeAsCreds) {
-            const secretConfig = this.credentials.secretConfig || '{}';
-            const secret = JSON.parse(secretConfig);
-            value = secret.deviceKey;
+            if (typeof this.credentials !== 'object') {
+              credsOffline = true;
+            } else {
+              const secretConfig = this.credentials.secretConfig || '{}';
+              const secret = JSON.parse(secretConfig);
+              value = secret.deviceKey;
+            }
           }
-          return value.trim().length > 0;
+          return storeAsCreds && credsOffline ? true : value.trim().length > 0;
         },
       },
       storeAsCreds: {

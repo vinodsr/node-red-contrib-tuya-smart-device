@@ -1,5 +1,9 @@
 # Changelog
 
+## 5.0.1
+
+- Fix error validating the creds in the view mode. This is an known issue [node-red#3420](https://github.com/node-red/node-red/issues/3420)
+
 ## 5.0.0
 
 - Updated TuyaAPI to `7.3.0`

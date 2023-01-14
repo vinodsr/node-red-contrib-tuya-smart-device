@@ -36,7 +36,7 @@ Instructions for getting the device id is available [here](https://github.com/co
 
 > Another technique for getting all deviceid linked to your tuya account
 >
-> https://github-wiki-see.page/m/iRayanKhan/homebridge-tuya/wiki/Get-Local-Keys-for-your-devices
+> [https://github-wiki-see.page/m/iRayanKhan/homebridge-tuya/wiki/Get-Local-Keys-for-your-devices](https://github.com/iRayanKhan/homebridge-tuya/wiki/Get-Local-Keys-for-your-devices)
 
 You will get the device id and the key once you run the wizard program as per the instructiions
 

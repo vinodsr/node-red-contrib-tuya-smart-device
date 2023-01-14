@@ -34,6 +34,10 @@ A node-red module which helps you to connect to any tuya device.
 
 Instructions for getting the device id is available [here](https://github.com/codetheweb/tuyapi/blob/master/docs/SETUP.md)
 
+> Another technique for getting all deviceid linked to your tuya account
+>
+> https://github-wiki-see.page/m/iRayanKhan/homebridge-tuya/wiki/Get-Local-Keys-for-your-devices
+
 You will get the device id and the key once you run the wizard program as per the instructiions
 
 Get more details about latest version changes in the [CHANGELOG.md](./changelog.md)

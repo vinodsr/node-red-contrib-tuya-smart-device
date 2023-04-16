@@ -1,5 +1,6 @@
 # Changelog
-## 5.1
+
+## 5.1.0
 
 - Update tuya CLI to v7.5.1 (https://github.com/vinodsr/node-red-contrib-tuya-smart-device/pull/110)
 

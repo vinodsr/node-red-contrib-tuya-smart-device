@@ -2,10 +2,10 @@ const VER = '5.0.1 + ms fixes'; // all fixes start  'ms XX/XX/XX'
 const TuyaDevice = require('tuyapi');
 const packageInfo = require('../package.json');
 const CLIENT_STATUS = {
-    DISCONNECTED: 'DISCONNECTED',
-    CONNECTED: 'CONNECTED',
-    CONNECTING: 'CONNECTING',
-    ERROR: 'ERROR',
+  DISCONNECTED: 'DISCONNECTED',
+  CONNECTED: 'CONNECTED',
+  CONNECTING: 'CONNECTING',
+  ERROR: 'ERROR',
 };
 
 module.exports = function (RED) {

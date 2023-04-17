@@ -39,7 +39,7 @@ module.exports = function (RED) {
     this.deviceIp = config.deviceIp;
     this.disableAutoStart = config.disableAutoStart;
     this.eventMode = config.eventMode || 'event-both';
-// 26/08/22: filter to exclude node-red stuff, like description: can be hurge
+// 26/08/22: filter to exclude node-red stuff, like info: can be hurge
     let publicConfig = Object.keys(config).filter(key => !['deviceId', 'deviceKey', 'x', 'y', 'wires', 'info'].includes(key)).reduce((obj, key) => {
             obj[key] = config[key];
             return obj;
@@ -170,7 +170,7 @@ module.exports = function (RED) {
                         closeComm();
               startComm();
           }
-// ms 26/08/22: added new COMMAND = 'SET_DATA_EVENT'
+// ms 26/08/22: added new COMMAND SET_DATA_EVENT = "both"|"event-data"|"event-dp-refresh"
           else if (msg.payload.action == 'SET_DATA_EVENT') {
                     shouldSubscribeData = true;
                     shouldSubscribeRefreshData = true;
@@ -284,7 +284,7 @@ module.exports = function (RED) {
                         }
                     }
                 ]);
- // ms 08/06/21: ERROR is a MESSAGE, it doesn't have to change the internal status CONNECTED/DISCONNECTED...     
+ // ms 08/06/21: ERROR is a MESSAGE, it doesn't have to change the internal deviceStatus CONNECTED/DISCONNECTED...     
    //   if (node.deviceStatus != CLIENT_STATUS.ERROR) {
    //     node.deviceStatus = CLIENT_STATUS.ERROR;
    //     node.send([null, sendDeviceConnectStatus()]);
@@ -463,7 +463,7 @@ module.exports = function (RED) {
     //          deviceKey: node.deviceKey,
             },
           });
-// ms 08/06/21     
+// ms 08/06/21    
            setStatusDisconnected();
           if (shouldTryReconnect) {
             node.log('findDevice(): Cannot find the device, re-trying...');

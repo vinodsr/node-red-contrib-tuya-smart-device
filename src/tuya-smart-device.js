@@ -1,3 +1,5 @@
+// 26/08/22
+const VER = '5.0.1 + fixes01';  
 const TuyaDevice = require('tuyapi');
 const packageInfo = require('../package.json');
 const CLIENT_STATUS = {
@@ -15,7 +17,8 @@ module.exports = function (RED) {
     let shouldTryReconnect = true;
     let shouldSubscribeData = true;
     let shouldSubscribeRefreshData = true;
-    console.log('CREDS', this.credentials, config.deviceId);
+// 26/08/22: anonymize the log
+//    console.log('CREDS', this.credentials, config.deviceId);  
     this.name = config.deviceName;
     this.deviceName = config.deviceName;
     this.storeAsCreds = config.storeAsCreds || false;
@@ -23,25 +26,34 @@ module.exports = function (RED) {
       // If the deviceId and key are stored in the creds take it from there
       const secretConfig = this.credentials.secretConfig || '{}';
       const secret = JSON.parse(secretConfig);
-      console.log('Using secrets :: ', secret);
+// 26/08/22: anonymize the log
+//      console.log('Using secrets :: ', secret);  
       this.deviceId = secret.deviceId;
       this.deviceKey = secret.deviceKey;
     } else {
       this.deviceId = config.deviceId;
       this.deviceKey = config.deviceKey;
     }
-
-    console.log('NEW DEVICE ID', this.deviceId);
+// 26/08/22: anonymize the log
+//    console.log('NEW DEVICE ID', this.deviceId); 
     this.deviceIp = config.deviceIp;
     this.disableAutoStart = config.disableAutoStart;
     this.eventMode = config.eventMode || 'event-both';
-    node.log(
-      `Recieved the config ${JSON.stringify({
-        ...config,
-        credentials: this.credentials,
-        moduleVersion: packageInfo.version,
-      })}`
-    );
+// 26/08/22: filter to exclude node-red stuff, like description: can be hurge
+    let publicConfig = Object.keys(config).filter(key => !['deviceId', 'deviceKey', 'x', 'y', 'wires', 'info'].includes(key)).reduce((obj, key) => {
+            obj[key] = config[key];
+            return obj;
+        }, {});
+        publicConfig.codeVersion = VER;
+        publicConfig.moduleVersion = packageInfo.version;
+        node.log(`Recieved the config ${JSON.stringify(publicConfig)}`);
+ //   node.log(
+ //     `Recieved the config ${JSON.stringify({
+ //       ...config,
+ //       credentials: this.credentials,
+ //       moduleVersion: packageInfo.version,
+ //     })}`
+ //   );
     this.retryTimeout =
       config.retryTimeout == null ||
       typeof config.retryTimeout == 'undefined' ||
@@ -69,8 +81,9 @@ module.exports = function (RED) {
       isNaN(config.tuyaVersion)
         ? '3.1'
         : config.tuyaVersion.trim();
-
-    this.deviceStatus = CLIENT_STATUS.DISCONNECTED;
+// 07/06/21: to force always a 'DISCONNECTED' message at startup
+//    this.deviceStatus = CLIENT_STATUS.DISCONNECTED;
+      this.deviceStatus = null;
     // Variable definition ends here
 
     if (this.eventMode == 'event-data') {
@@ -110,9 +123,11 @@ module.exports = function (RED) {
           setStatusOnError(errText, 'Device not connected !', {
             context: {
               message: errText,
-              deviceVirtualId: node.deviceId,
+// 08/06/21: anonymize the log      
+              device: node.deviceName,
+//              deviceVirtualId: node.deviceId,
               deviceIp: node.deviceIp,
-              deviceKey: node.deviceKey,
+//             deviceKey: node.deviceKey,
             },
           });
           return;
@@ -130,8 +145,12 @@ module.exports = function (RED) {
           break;
         case 'CONTROL':
           if (msg.payload.action == 'CONNECT') {
+// 08/06/21: CONNECT only if disconnected 
+            if (!tuyaDevice.isConnected())
             startComm();
           } else if (msg.payload.action == 'DISCONNECT') {
+// 08/06/21: DISCONNECT only if connected 
+            if (tuyaDevice.isConnected()) 
             closeComm();
           } else if (msg.payload.action == 'SET_FIND_TIMEOUT') {
             if (!isNaN(msg.payload.value) && msg.payload.value > 0) {
@@ -146,8 +165,24 @@ module.exports = function (RED) {
               node.log('Invalid retry timeout ! - ' + msg.payload.value);
             }
           } else if (msg.payload.action == 'RECONNECT') {
-            startComm();
+// ms 08/06/21: difference CONNECT vs RECONNECT: RECONNECT forces always
+          if (tuyaDevice.isConnected)
+                        closeComm();
+              startComm();
           }
+// ms 26/08/22: added new COMMAND = 'SET_DATA_EVENT'
+          else if (msg.payload.action == 'SET_DATA_EVENT') {
+                    shouldSubscribeData = true;
+                    shouldSubscribeRefreshData = true;
+                    if (msg.payload.value === 'event-data')
+                        shouldSubscribeRefreshData = false;
+                    if (msg.payload.value === 'event-dp-refresh')
+                        shouldSubscribeData = false;
+                    node.log(
+`Event subscription: shouldSubscribeData=>${shouldSubscribeData} , shouldSubscribeRefreshData=>${shouldSubscribeRefreshData}`
+                    );
+          }
+          
           break;
       }
     });
@@ -183,14 +218,21 @@ module.exports = function (RED) {
     };
 
     const startComm = () => {
-      closeComm();
+// 08/06/21: disconnect  not required here.      
+      // closeComm();
       // This 1 sec timeout will make sure that the diconnect happens ..
       // otherwise connect will not hanppen as the state is not changed
       findTimeoutHandler = setTimeout(() => {
         shouldTryReconnect = true;
+// 08/06/21: anonymize the log: filter
+          let publicParams = Object.keys(connectionParams).filter(key => !['id', 'key', 'ip'].includes(key)).reduce((obj, key) => {
+             obj[key] = connectionParams[key];
+             return obj;
+             }, {});
+
         node.log(
           `startComm(): Connecting to Tuya with params ${JSON.stringify(
-            connectionParams
+            publicParams
           )} , findTimeout :  ${node.findTimeout} , retryTimeout:  ${
             node.retryTimeout
           } `
@@ -233,11 +275,20 @@ module.exports = function (RED) {
       errorShortText = 'error',
       data
     ) {
-      node.error(errorText, data);
-      if (node.deviceStatus != CLIENT_STATUS.ERROR) {
-        node.deviceStatus = CLIENT_STATUS.ERROR;
-        node.send([null, sendDeviceConnectStatus()]);
-      }
+ // ms 08/06/21:  not required the console ERROR output    
+    //  node.error(errorText, data);
+        node.send([null, {
+                        payload: {
+                            state: CLIENT_STATUS.ERROR,
+                            ...data
+                        }
+                    }
+                ]);
+ // ms 08/06/21: ERROR is a MESSAGE, it doesn't have to change the internal status CONNECTED/DISCONNECTED...     
+   //   if (node.deviceStatus != CLIENT_STATUS.ERROR) {
+   //     node.deviceStatus = CLIENT_STATUS.ERROR;
+   //     node.send([null, sendDeviceConnectStatus()]);
+   //   }
       return node.status({ fill: 'red', shape: 'ring', text: errorShortText });
     };
     const connectionParams = {
@@ -245,6 +296,9 @@ module.exports = function (RED) {
       key: node.deviceKey,
       ip: node.deviceIp,
       issueGetOnConnect: false,
+ // ms 07/06/21:  set REFRESH under user control
+      issueRefreshOnConnect: false,
+      
       nullPayloadOnJSONError: false,
       version: node.tuyaVersion,
     };
@@ -267,7 +321,9 @@ module.exports = function (RED) {
 
     // Add event listeners
     tuyaDevice.on('connected', () => {
-      node.log('Connected to device! ' + node.deviceId);
+ // 08/06/21: anonymize the log
+      node.log("Connected to device! " + node.deviceName + " " + node.deviceIp);
+  //    node.log('Connected to device! ' + node.deviceId);
       setStatusConnected();
     });
 
@@ -292,9 +348,11 @@ module.exports = function (RED) {
       setStatusOnError(error, 'Error : ' + JSON.stringify(error), {
         context: {
           message: error,
-          deviceVirtualId: node.deviceId,
+ // ms 08/06/21: anonymize the log
+          device: node.deviceName,
+//          deviceVirtualId: node.deviceId,
           deviceIp: node.deviceIp,
-          deviceKey: node.deviceKey,
+//          deviceKey: node.deviceKey,
         },
       });
       if (
@@ -310,8 +368,10 @@ module.exports = function (RED) {
       }
     });
 
-    if (shouldSubscribeRefreshData) {
+// ms 26/08/22: deplaced 
+   //   if (shouldSubscribeRefreshData) {
       tuyaDevice.on('dp-refresh', (data) => {
+   if (shouldSubscribeRefreshData) {
         node.log(
           `Data from device  [event:dp-refresh]: ${JSON.stringify(data)}`
         );
@@ -326,11 +386,13 @@ module.exports = function (RED) {
           },
           null,
         ]);
-      });
-    }
-
-    if (shouldSubscribeData) {
+      }
+    });
+//    }
+// ms 26/08/22: deplaced
+ //   if (shouldSubscribeData) {
       tuyaDevice.on('data', (data) => {
+         if (shouldSubscribeData) {
         node.log(`Data from device  [event:data]: ${JSON.stringify(data)}`);
         setStatusConnected();
         node.send([
@@ -343,8 +405,9 @@ module.exports = function (RED) {
           },
           null,
         ]);
-      });
-    }
+      }
+    });
+ //   }
     let connectDevice = () => {
       clearTimeout(findTimeoutHandler);
       if (tuyaDevice.isConnected() === false) {
@@ -358,8 +421,9 @@ module.exports = function (RED) {
             )}`
           );
           if (shouldTryReconnect) {
-            node.log('connectDevice(): retrying the connect');
-            clearTimeout(findTimeoutHandler);
+// ms 08/06/21 reduce log
+        //     node.log('connectDevice(): retrying the connect');
+        //     clearTimeout(findTimeoutHandler);
             findTimeoutHandler = setTimeout(findDevice, node.retryTimeout);
           } else {
             node.log(
@@ -382,7 +446,8 @@ module.exports = function (RED) {
           timeout: parseInt(node.findTimeout / 1000),
         })
         .then(() => {
-          node.log('findDevice(): Found device, going to connect');
+// 08/06/21 reduce log
+ //         node.log('findDevice(): Found device, going to connect');
           // Connect to device
           connectDevice();
         })
@@ -391,11 +456,15 @@ module.exports = function (RED) {
           setStatusOnError(e.message, "Can't find device", {
             context: {
               message: e,
-              deviceVirtualId: node.deviceId,
+ // 08/06/21: anonymize the log
+              device: node.deviceName,              
+    //          deviceVirtualId: node.deviceId,
               deviceIp: node.deviceIp,
-              deviceKey: node.deviceKey,
+    //          deviceKey: node.deviceKey,
             },
           });
+// ms 08/06/21     
+           setStatusDisconnected();
           if (shouldTryReconnect) {
             node.log('findDevice(): Cannot find the device, re-trying...');
             findTimeoutHandler = setTimeout(findDevice, node.retryTimeout);
@@ -407,15 +476,21 @@ module.exports = function (RED) {
         });
     };
     // Start probing
+//08/06/21: deplaced here, always status DISCONNECTED at start
+     // If we dont use timeout , state will not be emitted,
+      setTimeout(() => {
+        setStatusDisconnected();
+      }, 1000);
+    
     if (!node.disableAutoStart) {
       node.log('Auto start probe on connect...');
       startComm();
     } else {
       node.log('Auto start probe is disabled ');
-      // If we dont use timeout , state will not be emitted,
-      setTimeout(() => {
-        setStatusDisconnected();
-      }, 1000);
+ //     // If we dont use timeout , state will not be emitted,
+ //     setTimeout(() => {
+ //      setStatusDisconnected();
+ //     }, 1000);
     }
   }
   RED.nodes.registerType('tuya-smart-device', TuyaSmartDeviceNode, {

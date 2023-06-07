@@ -15,7 +15,6 @@ module.exports = function (RED) {
     let shouldTryReconnect = true;
     let shouldSubscribeData = true;
     let shouldSubscribeRefreshData = true;
-    console.log('CREDS', this.credentials, config.deviceId);
     this.name = config.deviceName;
     this.deviceName = config.deviceName;
     this.storeAsCreds = config.storeAsCreds || false;
@@ -23,18 +22,21 @@ module.exports = function (RED) {
       // If the deviceId and key are stored in the creds take it from there
       const secretConfig = this.credentials.secretConfig || '{}';
       const secret = JSON.parse(secretConfig);
-      console.log('Using secrets :: ', secret);
+      console.log(
+        'loading the deviceId and deviceKey from secret credentials ...'
+      );
       this.deviceId = secret.deviceId;
       this.deviceKey = secret.deviceKey;
     } else {
+      console.log('loading the deviceId and deviceKey from config ...');
       this.deviceId = config.deviceId;
       this.deviceKey = config.deviceKey;
     }
 
-    console.log('NEW DEVICE ID', this.deviceId);
     this.deviceIp = config.deviceIp;
     this.disableAutoStart = config.disableAutoStart;
     this.eventMode = config.eventMode || 'event-both';
+    //TODO: find a perfect method to optimize the printing
     node.log(
       `Recieved the config ${JSON.stringify({
         ...config,
@@ -70,7 +72,7 @@ module.exports = function (RED) {
         ? '3.1'
         : config.tuyaVersion.trim();
 
-    this.deviceStatus = CLIENT_STATUS.DISCONNECTED;
+    this.deviceStatus = null;
     // Variable definition ends here
 
     if (this.eventMode == 'event-data') {
@@ -107,11 +109,13 @@ module.exports = function (RED) {
           // error device not connected
           let errText = `Device not connected. Can't send the ${operation} commmand`;
           node.log(errText);
+          //TODO : make the log anonymous
           setStatusOnError(errText, 'Device not connected !', {
             context: {
               message: errText,
               deviceVirtualId: node.deviceId,
               deviceIp: node.deviceIp,
+              deviceName: node.deviceName,
               deviceKey: node.deviceKey,
             },
           });
@@ -130,9 +134,15 @@ module.exports = function (RED) {
           break;
         case 'CONTROL':
           if (msg.payload.action == 'CONNECT') {
-            startComm();
+            if (!tuyaDevice.isConnected()) {
+              // Connect only when disconnected
+              startComm();
+            }
           } else if (msg.payload.action == 'DISCONNECT') {
-            closeComm();
+            //Disconnect only when connected.
+            if (tuyaDevice.isConnected()) {
+              closeComm();
+            }
           } else if (msg.payload.action == 'SET_FIND_TIMEOUT') {
             if (!isNaN(msg.payload.value) && msg.payload.value > 0) {
               setFindTimeout(msg.payload.value);
@@ -146,7 +156,21 @@ module.exports = function (RED) {
               node.log('Invalid retry timeout ! - ' + msg.payload.value);
             }
           } else if (msg.payload.action == 'RECONNECT') {
+            if (tuyaDevice.isConnected) {
+              closeComm();
+            }
             startComm();
+          } else if (msg.payload.action == 'SET_DATA_EVENT') {
+            //TODO: Analyze
+            shouldSubscribeData = true;
+            shouldSubscribeRefreshData = true;
+            if (msg.payload.value === 'event-data')
+              shouldSubscribeRefreshData = false;
+            if (msg.payload.value === 'event-dp-refresh')
+              shouldSubscribeData = false;
+            node.log(
+              `Event subscription: shouldSubscribeData=>${shouldSubscribeData} , shouldSubscribeRefreshData=>${shouldSubscribeRefreshData}`
+            );
           }
           break;
       }
@@ -183,11 +207,11 @@ module.exports = function (RED) {
     };
 
     const startComm = () => {
-      closeComm();
       // This 1 sec timeout will make sure that the diconnect happens ..
       // otherwise connect will not hanppen as the state is not changed
       findTimeoutHandler = setTimeout(() => {
         shouldTryReconnect = true;
+        //TODO: Make the log anonymous
         node.log(
           `startComm(): Connecting to Tuya with params ${JSON.stringify(
             connectionParams
@@ -247,6 +271,7 @@ module.exports = function (RED) {
       issueGetOnConnect: false,
       nullPayloadOnJSONError: false,
       version: node.tuyaVersion,
+      issueRefreshOnConnect: false,
     };
 
     let tuyaDevice = new TuyaDevice(connectionParams);
@@ -267,7 +292,12 @@ module.exports = function (RED) {
 
     // Add event listeners
     tuyaDevice.on('connected', () => {
-      node.log('Connected to device! ' + node.deviceId);
+      node.log(
+        'Connected to device! name : ' +
+          node.deviceName +
+          ', ip : ' +
+          node.deviceIp
+      );
       setStatusConnected();
     });
 
@@ -289,6 +319,7 @@ module.exports = function (RED) {
           ', error  = ' +
           JSON.stringify(error)
       );
+      // Anonymize
       setStatusOnError(error, 'Error : ' + JSON.stringify(error), {
         context: {
           message: error,
@@ -310,8 +341,8 @@ module.exports = function (RED) {
       }
     });
 
-    if (shouldSubscribeRefreshData) {
-      tuyaDevice.on('dp-refresh', (data) => {
+    tuyaDevice.on('dp-refresh', (data) => {
+      if (shouldSubscribeRefreshData) {
         node.log(
           `Data from device  [event:dp-refresh]: ${JSON.stringify(data)}`
         );
@@ -326,11 +357,11 @@ module.exports = function (RED) {
           },
           null,
         ]);
-      });
-    }
+      }
+    });
 
-    if (shouldSubscribeData) {
-      tuyaDevice.on('data', (data) => {
+    tuyaDevice.on('data', (data) => {
+      if (shouldSubscribeData) {
         node.log(`Data from device  [event:data]: ${JSON.stringify(data)}`);
         setStatusConnected();
         node.send([
@@ -343,8 +374,9 @@ module.exports = function (RED) {
           },
           null,
         ]);
-      });
-    }
+      }
+    });
+
     let connectDevice = () => {
       clearTimeout(findTimeoutHandler);
       if (tuyaDevice.isConnected() === false) {
@@ -359,7 +391,9 @@ module.exports = function (RED) {
           );
           if (shouldTryReconnect) {
             node.log('connectDevice(): retrying the connect');
-            clearTimeout(findTimeoutHandler);
+            if (findTimeoutHandler) {
+              clearTimeout(findTimeoutHandler);
+            }
             findTimeoutHandler = setTimeout(findDevice, node.retryTimeout);
           } else {
             node.log(
@@ -388,6 +422,7 @@ module.exports = function (RED) {
         })
         .catch((e) => {
           // We need to retry
+          // TODO: Make the log anonymous
           setStatusOnError(e.message, "Can't find device", {
             context: {
               message: e,
@@ -396,6 +431,7 @@ module.exports = function (RED) {
               deviceKey: node.deviceKey,
             },
           });
+          setStatusDisconnected();
           if (shouldTryReconnect) {
             node.log('findDevice(): Cannot find the device, re-trying...');
             findTimeoutHandler = setTimeout(findDevice, node.retryTimeout);
@@ -406,16 +442,18 @@ module.exports = function (RED) {
           }
         });
     };
+
+    // Initial state
+    setTimeout(() => {
+      setStatusDisconnected();
+    }, 500);
+
     // Start probing
     if (!node.disableAutoStart) {
       node.log('Auto start probe on connect...');
       startComm();
     } else {
       node.log('Auto start probe is disabled ');
-      // If we dont use timeout , state will not be emitted,
-      setTimeout(() => {
-        setStatusDisconnected();
-      }, 1000);
     }
   }
   RED.nodes.registerType('tuya-smart-device', TuyaSmartDeviceNode, {

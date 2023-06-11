@@ -1,5 +1,11 @@
 # Changelog
 
+## 5.2.0
+
+- Added new control action "SET_EVENT_MODE"
+- Improve the code base
+- Improved example
+
 ## 5.1.0
 
 - Update tuya CLI to v7.5.1 (https://github.com/vinodsr/node-red-contrib-tuya-smart-device/pull/110)

@@ -335,7 +335,7 @@
         } }</code
       >
     </dd>
-    <dt class="">dps <span class="property-type">action</span></dt>
+    <dt class="">action <span class="property-type">string</span></dt>
     <dd>
       This property works only with operation is set as "CONTROL"
 
@@ -353,7 +353,7 @@
           <td>Disconnect from the device</td>
         </tr>
         <tr>
-          <td>RECONNECTS</td>
+          <td>RECONNECT</td>
           <td>Reconnects to the device</td>
         </tr>
         <tr>
@@ -368,7 +368,34 @@
             Sets the retry timeout dynamically. This is not saved in the config
           </td>
         </tr>
+        <tr>
+          <td>SET_EVENT_MODE</td>
+          <td>
+            Sets the event mode dynamically. This is not saved in the config.
+            <br />
+            <br />
+            value = event-data //for subscribing to only data event
+            <br />
+            <br />
+            value = event-dp-refresh //for subscribing to only dp-refresh event
+            <br />
+            <br />
+            value = both //for subscribing to both events
+          </td>
+        </tr>
       </table>
+      example :
+      <div>
+        action : CONNECT
+        <code> payload = { "operation": "CONTROL", "action": "CONNECT" } </code>
+      </div>
+      <div>
+        action : SET_EVENT_MODE
+        <code>
+          payload = { "operation": "CONTROL", "action": "SET_EVENT_MODE",
+          "value": "event-data" }
+        </code>
+      </div>
     </dd>
   </dl>
 

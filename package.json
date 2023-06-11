@@ -14,12 +14,16 @@
     "node-red"
   ],
   "node-red": {
+    "version": ">=2.5.0",
     "nodes": {
       "tuya-smart-device": "src/tuya-smart-device.js",
       "tuya-smart-device-generic": "src/tuya-smart-device-generic.js"
     }
   },
   "dependencies": {
-    "tuyapi": "7.5.1"
+    "tuyapi": "~7.5.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
   }
 }

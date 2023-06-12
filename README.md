@@ -11,6 +11,7 @@ A node-red module which helps you to connect to any tuya device.
 
 # Table of contents
 
+- [Requirements](#requirements)
 - [Features](#features)
 - [Getting Started](#getting-started)
 - [Setup](#setup)
@@ -18,6 +19,11 @@ A node-red module which helps you to connect to any tuya device.
   - [Output Format](#output-format)
 - [License](#license)
 - [Contributing](#contributing)
+
+# Requirements
+
+- nodeJS >= 16.0.0
+- node-red >= 2.5.0
 
 # Features
 

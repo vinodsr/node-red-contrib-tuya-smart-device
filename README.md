@@ -35,6 +35,7 @@ A node-red module which helps you to connect to any tuya device.
 - Ability to listen to both `Data` and `DP-Refresh` event
 - Can store deviceId and deviceKey as crendentials
 - Better error handling
+- Better log handling
 
 # Getting Started
 

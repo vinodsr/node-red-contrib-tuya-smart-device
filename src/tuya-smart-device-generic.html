@@ -5,6 +5,7 @@
     defaults: {
       name: { value: '', required: false },
       eventMode: { value: 'event-both', required: true },
+      logLevel: { value: 'log-level-debug', required: false },
     },
     inputs: 1,
     outputs: 1,
@@ -17,6 +18,10 @@
       let eventMode = this.eventMode || 'event-both';
       $("select[name='node-input-eventMode']")
         .find(`option[value='${eventMode}']`)
+        .attr('selected', true);
+      let logLevel = this.logLevel || 'log-level-debug';
+      $("select[name='node-input-logLevel']")
+        .find(`option[value='${logLevel}']`)
         .attr('selected', true);
     },
   });
@@ -43,6 +48,20 @@
         <option value="event-data">Data Event</option>
         <option value="event-dp-refresh">DP-Refresh Event</option>
         <option value="event-both">Both Events</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label style="width:100%" for="node-input-loglevel"
+        ><i class="fa fa-file"></i> Log Level (Will not override the node-red
+        logging config. Only applies to this node)</label
+      >
+    </div>
+    <div class="form-row">
+      <select name="node-input-logLevel" id="node-input-logLevel">
+        <option value="log-level-error">Error</option>
+        <option value="log-level-info">Info</option>
+        <option value="log-level-debug">Debug</option>
+        <option value="log-level-disable">Disable</option>
       </select>
     </div>
   </div>

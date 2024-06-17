@@ -1,5 +1,6 @@
-const TuyaDevice = require("tuyapi");
-const packageInfo = require("../package.json");
+const TuyaDevice = require('tuyapi');
+const packageInfo = require('../package.json');
+const utils = require('./utils');
 
 module.exports = function (RED) {
   function TuyaSmartDeviceSelfNode(config) {
@@ -8,12 +9,16 @@ module.exports = function (RED) {
     let shouldSubscribeData = true;
     let shouldSubscribeRefreshData = true;
     this.name = config.name;
-    this.eventMode = config.eventMode || "event-both";
+    this.eventMode = config.eventMode || 'event-both';
+    this.logLevel = config.logLevel || 'log-level-debug';
+    const logLevelNum = utils.UI_LOG_LEVELS[this.logLevel] || 3; // default incase of any error is debug
+    node.log(`Setting custom log level as ${this.logLevel}`);
+    this.logger = utils.createLogger(this, logLevelNum);
     this.operations = [];
-    if (this.eventMode == "event-data") {
+    if (this.eventMode == 'event-data') {
       shouldSubscribeData = true;
       shouldSubscribeRefreshData = false;
-    } else if (this.eventMode == "event-dp-refresh") {
+    } else if (this.eventMode == 'event-dp-refresh') {
       shouldSubscribeData = false;
       shouldSubscribeRefreshData = true;
     } else {
@@ -21,11 +26,11 @@ module.exports = function (RED) {
       shouldSubscribeData = true;
       shouldSubscribeRefreshData = true;
     }
-    node.on("input", function (msg) {
-      let operation = msg.payload.operation || "SET";
+    node.on('input', function (msg) {
+      let operation = msg.payload.operation || 'SET';
       delete msg.payload.operation;
       let requestID = new Date().getTime();
-      node.log(
+      node.logger.log(
         `[${requestID}] recieved data on input : ${JSON.stringify({
           ...msg,
           moduleVersion: packageInfo.version,
@@ -35,10 +40,10 @@ module.exports = function (RED) {
       node.operations.push(1);
       const tuyaProtocolVersion =
         msg.payload.version == null ||
-        typeof msg.payload.version == "undefined" ||
-        msg.payload.version.trim() == "" ||
+        typeof msg.payload.version == 'undefined' ||
+        msg.payload.version.trim() == '' ||
         isNaN(msg.payload.version)
-          ? "3.1"
+          ? '3.1'
           : msg.payload.version.trim();
       const connectionParams = {
         id: msg.payload.deviceVirtualId,
@@ -48,13 +53,13 @@ module.exports = function (RED) {
         nullPayloadOnJSONError: false,
         version: tuyaProtocolVersion,
       };
-      node.log(
+      node.logger.debug(
         `Connecting to tuya with params : ${JSON.stringify(connectionParams)}`
       );
       let tuyaDevice = new TuyaDevice(connectionParams);
 
-      tuyaDevice.on("disconnected", () => {
-        node.log(`[${requestID}]  Disconnected from tuyaDevice.`);
+      tuyaDevice.on('disconnected', () => {
+        node.logger.log(`[${requestID}]  Disconnected from tuyaDevice.`);
         node.operations.pop();
         if (node.operations.length === 0) {
           // Show the disconnected status if there is no more active connections.
@@ -62,9 +67,9 @@ module.exports = function (RED) {
         }
       });
 
-      tuyaDevice.on("error", (error) => {
+      tuyaDevice.on('error', (error) => {
         node.operations.pop();
-        setStatusOnError(error, requestID, "Error", {
+        setStatusOnError(error, requestID, 'Error', {
           context: {
             message: error,
             deviceVirtualId: msg.payload.deviceVirtualId,
@@ -74,14 +79,14 @@ module.exports = function (RED) {
           },
         });
       });
-      tuyaDevice.on("connected", () => {
-        node.log(
+      tuyaDevice.on('connected', () => {
+        node.logger.log(
           `[${requestID}]  Connected to device! ${msg.payload.deviceVirtualId}`
         );
         setStatusConnected();
         switch (operation) {
-          case "SET":
-            node.log(
+          case 'SET':
+            node.logger.debug(
               `[${requestID}]  sending command SET : ${JSON.stringify(
                 msg.payload.payload
               )}`
@@ -89,13 +94,13 @@ module.exports = function (RED) {
             tuyaDevice.set(msg.payload.payload);
             break;
           default:
-            node.log(`[${requestID}] Invalid operation ${operation}`);
+            node.logger.error(`[${requestID}] Invalid operation ${operation}`);
         }
       });
 
       if (shouldSubscribeRefreshData) {
-        tuyaDevice.on("dp-refresh", (data) => {
-          node.log(
+        tuyaDevice.on('dp-refresh', (data) => {
+          node.logger.debug(
             `[${requestID}] Data from device [event:dp-refresh]: ${JSON.stringify(
               data
             )}`
@@ -115,8 +120,8 @@ module.exports = function (RED) {
       }
 
       if (shouldSubscribeData) {
-        tuyaDevice.on("data", (data) => {
-          node.log(
+        tuyaDevice.on('data', (data) => {
+          node.logger.debug(
             `[${requestID}] Data from device [event:data]: ${JSON.stringify(
               data
             )}`
@@ -136,7 +141,7 @@ module.exports = function (RED) {
       }
       let findDevice = () => {
         setStatusConnecting();
-        node.log(`[${requestID}] initiating the find command`);
+        node.logger.debug(`[${requestID}] initiating the find command`);
         tuyaDevice
           .find({})
           .then(() => {
@@ -153,37 +158,37 @@ module.exports = function (RED) {
                 deviceIp: msg.payload.deviceIp,
               },
             });
-            node.log(`[${requestID}] Cannot find the device`);
+            node.logger.error(`[${requestID}] Cannot find the device`);
             //setTimeout(findDevice, 1000);
           });
       };
       findDevice();
     });
     let setStatusConnecting = function () {
-      return node.status({ fill: "yellow", shape: "ring", text: "connecting" });
+      return node.status({ fill: 'yellow', shape: 'ring', text: 'connecting' });
     };
     let setStatusConnected = function () {
-      return node.status({ fill: "green", shape: "ring", text: "connected" });
+      return node.status({ fill: 'green', shape: 'ring', text: 'connected' });
     };
     let setStatusDisconnected = function () {
-      return node.status({ fill: "red", shape: "ring", text: "disconnected" });
+      return node.status({ fill: 'red', shape: 'ring', text: 'disconnected' });
     };
     var setStatusOnError = function (
       errorText,
       requestID,
-      errorShortText = "error",
+      errorShortText = 'error',
       data
     ) {
       node.error(`[${requestID}] An error had occured : ${errorText}`, data);
-      return node.status({ fill: "red", shape: "ring", text: errorShortText });
+      return node.status({ fill: 'red', shape: 'ring', text: errorShortText });
     };
 
-    node.on("close", function () {
+    node.on('close', function () {
       // tidy up any state
       // clearInterval(int);
       //shouldTryReconnect = false;
       //tuyaDevice.disconnect();
     });
   }
-  RED.nodes.registerType("tuya-smart-device-generic", TuyaSmartDeviceSelfNode);
+  RED.nodes.registerType('tuya-smart-device-generic', TuyaSmartDeviceSelfNode);
 };

@@ -1,5 +1,9 @@
 # Changelog
 
+## 5.3.0
+
+- Added log level control to each node
+
 ## 5.2.0
 
 - Added new control action "SET_EVENT_MODE"

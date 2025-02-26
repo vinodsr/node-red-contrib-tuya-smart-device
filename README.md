@@ -5,7 +5,7 @@
 ![Build and Publish package](https://github.com/vinodsr/node-red-contrib-tuya-smart-device/workflows/Build%20and%20Publish%20package/badge.svg)
 ![License](https://img.shields.io/github/license/vinodsr/node-red-contrib-tuya-smart-device)
 
-A node-red module which helps you to connect to any tuya device.
+A node-red module which helps you to connect to any tuya device using [tuyapi](https://github.com/codetheweb/tuyapi) library
 
 ![image](./img/sample.png)
 

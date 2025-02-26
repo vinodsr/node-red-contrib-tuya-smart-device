@@ -1,5 +1,9 @@
 # Changelog
 
+## 5.3.1
+
+- Added support for Tuyapi 7.7.0 (supports protocol version 3.5)
+
 ## 5.3.0
 
 - Added log level control to each node

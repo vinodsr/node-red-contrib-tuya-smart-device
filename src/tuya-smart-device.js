@@ -112,86 +112,98 @@ module.exports = function (RED) {
     let retryTimerHandler = null;
 
     node.on('input', function (msg) {
-      node.logger.debug(`Recieved input : ${JSON.stringify(msg)}`);
+      try {
+        node.logger.debug(`Recieved input : ${JSON.stringify(msg)}`);
 
-      let operation = msg.payload.operation || 'SET';
-      delete msg.payload.operation;
-      if (['GET', 'SET', 'REFRESH'].indexOf(operation) != -1) {
-        // the device has to be connected.
-        if (!tuyaDevice.isConnected()) {
-          // error device not connected
-          let errText = `Device not connected. Can't send the ${operation} commmand`;
-          node.logger.log(errText);
-          setStatusOnError(errText, 'Device not connected !', {
-            context: {
-              message: errText,
-              deviceVirtualId: node.deviceId,
-              deviceIp: node.deviceIp,
-              deviceName: node.deviceName,
-              deviceKey: node.deviceKey,
-            },
-          });
-          return;
-        }
-      }
-      switch (operation) {
-        case 'SET':
-          tuyaDevice.set(msg.payload);
-          break;
-        case 'REFRESH':
-          tuyaDevice.refresh(msg.payload);
-          break;
-        case 'GET':
-          tuyaDevice.get(msg.payload);
-          break;
-        case 'CONTROL':
-          if (msg.payload.action == 'CONNECT') {
-            if (!tuyaDevice.isConnected()) {
-              // Connect only when disconnected
-              startComm();
-            }
-          } else if (msg.payload.action == 'DISCONNECT') {
-            //Disconnect only when connected.
-            // Make disconnect force
-            closeComm();
-          } else if (msg.payload.action == 'SET_FIND_TIMEOUT') {
-            if (!isNaN(msg.payload.value) && msg.payload.value > 0) {
-              setFindTimeout(msg.payload.value);
-            } else {
-              node.logger.error(
-                'Invalid find timeout ! - ' + msg.payload.value
-              );
-            }
-          } else if (msg.payload.action == 'SET_RETRY_TIMEOUT') {
-            if (!isNaN(msg.payload.value) && msg.payload.value > 0) {
-              setRetryTimeout(msg.payload.value);
-            } else {
-              node.logger.error(
-                'Invalid retry timeout ! - ' + msg.payload.value
-              );
-            }
-          } else if (msg.payload.action == 'RECONNECT') {
-            if (tuyaDevice.isConnected) {
-              closeComm();
-            }
-            startComm();
-          } else if (msg.payload.action == 'SET_EVENT_MODE') {
-            shouldSubscribeData = true;
-            shouldSubscribeRefreshData = true;
-            // if any incorrect value set the event mode as BOTH
-            node.eventMode = EVENT_MODES.BOTH;
-            if (msg.payload.value === EVENT_MODES.DATA) {
-              shouldSubscribeRefreshData = false;
-              node.eventMode = EVENT_MODES.DATA;
-            } else if (msg.payload.value === EVENT_MODES.DP_REFRESH) {
-              shouldSubscribeData = false;
-              node.eventMode = EVENT_MODES.DP_REFRESH;
-            }
-            node.logger.debug(
-              `SET_EVENT_MODE : shouldSubscribeData=>${shouldSubscribeData} , shouldSubscribeRefreshData=>${shouldSubscribeRefreshData}`
-            );
+        let operation = msg.payload.operation || 'SET';
+        delete msg.payload.operation;
+        if (['GET', 'SET', 'REFRESH'].indexOf(operation) != -1) {
+          // the device has to be connected.
+          if (!tuyaDevice.isConnected()) {
+            // error device not connected
+            let errText = `Device not connected. Can't send the ${operation} commmand`;
+            node.logger.log(errText);
+            setStatusOnError(errText, 'Device not connected !', {
+              context: {
+                message: errText,
+                deviceVirtualId: node.deviceId,
+                deviceIp: node.deviceIp,
+                deviceName: node.deviceName,
+                deviceKey: node.deviceKey,
+              },
+            });
+            return;
           }
-          break;
+        }
+        switch (operation) {
+          case 'SET':
+            tuyaDevice.set(msg.payload);
+            break;
+          case 'REFRESH':
+            tuyaDevice.refresh(msg.payload);
+            break;
+          case 'GET':
+            tuyaDevice.get(msg.payload);
+            break;
+          case 'CONTROL':
+            if (msg.payload.action == 'CONNECT') {
+              if (!tuyaDevice.isConnected()) {
+                // Connect only when disconnected
+                startComm();
+              }
+            } else if (msg.payload.action == 'DISCONNECT') {
+              //Disconnect only when connected.
+              // Make disconnect force
+              closeComm();
+            } else if (msg.payload.action == 'SET_FIND_TIMEOUT') {
+              if (!isNaN(msg.payload.value) && msg.payload.value > 0) {
+                setFindTimeout(msg.payload.value);
+              } else {
+                node.logger.error(
+                  'Invalid find timeout ! - ' + msg.payload.value
+                );
+              }
+            } else if (msg.payload.action == 'SET_RETRY_TIMEOUT') {
+              if (!isNaN(msg.payload.value) && msg.payload.value > 0) {
+                setRetryTimeout(msg.payload.value);
+              } else {
+                node.logger.error(
+                  'Invalid retry timeout ! - ' + msg.payload.value
+                );
+              }
+            } else if (msg.payload.action == 'RECONNECT') {
+              if (tuyaDevice.isConnected) {
+                closeComm();
+              }
+              startComm();
+            } else if (msg.payload.action == 'SET_EVENT_MODE') {
+              shouldSubscribeData = true;
+              shouldSubscribeRefreshData = true;
+              // if any incorrect value set the event mode as BOTH
+              node.eventMode = EVENT_MODES.BOTH;
+              if (msg.payload.value === EVENT_MODES.DATA) {
+                shouldSubscribeRefreshData = false;
+                node.eventMode = EVENT_MODES.DATA;
+              } else if (msg.payload.value === EVENT_MODES.DP_REFRESH) {
+                shouldSubscribeData = false;
+                node.eventMode = EVENT_MODES.DP_REFRESH;
+              }
+              node.logger.debug(
+                `SET_EVENT_MODE : shouldSubscribeData=>${shouldSubscribeData} , shouldSubscribeRefreshData=>${shouldSubscribeRefreshData}`
+              );
+            }
+            break;
+        }
+      } catch (error) {
+        console.error('Uncaught exception occured ! ', error);
+        setStatusOnError(error.message, 'Uncaught error : ' + error.message, {
+          context: {
+            message: error.message,
+            deviceVirtualId: node.deviceId,
+            deviceIp: node.deviceIp,
+            deviceKey: node.deviceKey,
+          },
+        });
       }
     });
 

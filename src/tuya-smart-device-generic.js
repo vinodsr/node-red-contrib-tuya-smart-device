@@ -27,142 +27,161 @@ module.exports = function (RED) {
       shouldSubscribeRefreshData = true;
     }
     node.on('input', function (msg) {
-      let operation = msg.payload.operation || 'SET';
-      delete msg.payload.operation;
       let requestID = new Date().getTime();
-      node.logger.log(
-        `[${requestID}] recieved data on input : ${JSON.stringify({
-          ...msg,
-          moduleVersion: packageInfo.version,
-        })}`
-      );
-      // Initiate the device connection and then send the payload
-      node.operations.push(1);
-      const tuyaProtocolVersion =
-        msg.payload.version == null ||
-        typeof msg.payload.version == 'undefined' ||
-        msg.payload.version.trim() == '' ||
-        isNaN(msg.payload.version)
-          ? '3.1'
-          : msg.payload.version.trim();
-      const connectionParams = {
-        id: msg.payload.deviceVirtualId,
-        key: msg.payload.deviceKey,
-        ip: msg.payload.deviceIp,
-        issueGetOnConnect: false,
-        nullPayloadOnJSONError: false,
-        version: tuyaProtocolVersion,
-      };
-      node.logger.debug(
-        `Connecting to tuya with params : ${JSON.stringify(connectionParams)}`
-      );
-      let tuyaDevice = new TuyaDevice(connectionParams);
-
-      tuyaDevice.on('disconnected', () => {
-        node.logger.log(`[${requestID}]  Disconnected from tuyaDevice.`);
-        node.operations.pop();
-        if (node.operations.length === 0) {
-          // Show the disconnected status if there is no more active connections.
-          setStatusDisconnected();
-        }
-      });
-
-      tuyaDevice.on('error', (error) => {
-        node.operations.pop();
-        setStatusOnError(error, requestID, 'Error', {
-          context: {
-            message: error,
-            deviceVirtualId: msg.payload.deviceVirtualId,
-            deviceKey: msg.payload.deviceKey,
-            deviceIp: msg.payload.deviceIp,
-            requestID: requestID,
-          },
-        });
-      });
-      tuyaDevice.on('connected', () => {
+      try {
+        let operation = msg.payload.operation || 'SET';
+        delete msg.payload.operation;
         node.logger.log(
-          `[${requestID}]  Connected to device! ${msg.payload.deviceVirtualId}`
+          `[${requestID}] recieved data on input : ${JSON.stringify({
+            ...msg,
+            moduleVersion: packageInfo.version,
+          })}`
         );
-        setStatusConnected();
-        switch (operation) {
-          case 'SET':
+        // Initiate the device connection and then send the payload
+        node.operations.push(1);
+        const tuyaProtocolVersion =
+          msg.payload.version == null ||
+          typeof msg.payload.version == 'undefined' ||
+          msg.payload.version.trim() == '' ||
+          isNaN(msg.payload.version)
+            ? '3.1'
+            : msg.payload.version.trim();
+        const connectionParams = {
+          id: msg.payload.deviceVirtualId,
+          key: msg.payload.deviceKey,
+          ip: msg.payload.deviceIp,
+          issueGetOnConnect: false,
+          nullPayloadOnJSONError: false,
+          version: tuyaProtocolVersion,
+        };
+        node.logger.debug(
+          `Connecting to tuya with params : ${JSON.stringify(connectionParams)}`
+        );
+        let tuyaDevice = new TuyaDevice(null);
+
+        tuyaDevice.on('disconnected', () => {
+          node.logger.log(`[${requestID}]  Disconnected from tuyaDevice.`);
+          node.operations.pop();
+          if (node.operations.length === 0) {
+            // Show the disconnected status if there is no more active connections.
+            setStatusDisconnected();
+          }
+        });
+
+        tuyaDevice.on('error', (error) => {
+          node.operations.pop();
+          setStatusOnError(error, requestID, 'Error', {
+            context: {
+              message: error,
+              deviceVirtualId: msg.payload.deviceVirtualId,
+              deviceKey: msg.payload.deviceKey,
+              deviceIp: msg.payload.deviceIp,
+              requestID: requestID,
+            },
+          });
+        });
+        tuyaDevice.on('connected', () => {
+          node.logger.log(
+            `[${requestID}]  Connected to device! ${msg.payload.deviceVirtualId}`
+          );
+          setStatusConnected();
+          switch (operation) {
+            case 'SET':
+              node.logger.debug(
+                `[${requestID}]  sending command SET : ${JSON.stringify(
+                  msg.payload.payload
+                )}`
+              );
+              tuyaDevice.set(msg.payload.payload);
+              break;
+            default:
+              node.logger.error(
+                `[${requestID}] Invalid operation ${operation}`
+              );
+          }
+        });
+
+        if (shouldSubscribeRefreshData) {
+          tuyaDevice.on('dp-refresh', (data) => {
             node.logger.debug(
-              `[${requestID}]  sending command SET : ${JSON.stringify(
-                msg.payload.payload
+              `[${requestID}] Data from device [event:dp-refresh]: ${JSON.stringify(
+                data
               )}`
             );
-            tuyaDevice.set(msg.payload.payload);
-            break;
-          default:
-            node.logger.error(`[${requestID}] Invalid operation ${operation}`);
-        }
-      });
-
-      if (shouldSubscribeRefreshData) {
-        tuyaDevice.on('dp-refresh', (data) => {
-          node.logger.debug(
-            `[${requestID}] Data from device [event:dp-refresh]: ${JSON.stringify(
-              data
-            )}`
-          );
-          tuyaDevice.disconnect();
-          node.send({
-            payload: {
-              data: data,
-              deviceVirtualId: msg.payload.deviceVirtualId,
-              deviceKey: msg.payload.deviceKey,
-              deviceName: msg.payload.deviceName,
-              deviceIp: msg.payload.deviceIp,
-              requestID: requestID,
-            },
-          });
-        });
-      }
-
-      if (shouldSubscribeData) {
-        tuyaDevice.on('data', (data) => {
-          node.logger.debug(
-            `[${requestID}] Data from device [event:data]: ${JSON.stringify(
-              data
-            )}`
-          );
-          tuyaDevice.disconnect();
-          node.send({
-            payload: {
-              data: data,
-              deviceVirtualId: msg.payload.deviceVirtualId,
-              deviceKey: msg.payload.deviceKey,
-              deviceName: msg.payload.deviceName,
-              deviceIp: msg.payload.deviceIp,
-              requestID: requestID,
-            },
-          });
-        });
-      }
-      let findDevice = () => {
-        setStatusConnecting();
-        node.logger.debug(`[${requestID}] initiating the find command`);
-        tuyaDevice
-          .find({})
-          .then(() => {
-            // Connect to device
-            tuyaDevice.connect();
-          })
-          .catch((e) => {
-            // We need to retry
-            setStatusOnError(e.message, requestID, "Can't find device", {
-              context: {
-                message: e,
+            tuyaDevice.disconnect();
+            node.send({
+              payload: {
+                data: data,
                 deviceVirtualId: msg.payload.deviceVirtualId,
                 deviceKey: msg.payload.deviceKey,
+                deviceName: msg.payload.deviceName,
                 deviceIp: msg.payload.deviceIp,
+                requestID: requestID,
               },
             });
-            node.logger.error(`[${requestID}] Cannot find the device`);
-            //setTimeout(findDevice, 1000);
           });
-      };
-      findDevice();
+        }
+
+        if (shouldSubscribeData) {
+          tuyaDevice.on('data', (data) => {
+            node.logger.debug(
+              `[${requestID}] Data from device [event:data]: ${JSON.stringify(
+                data
+              )}`
+            );
+            tuyaDevice.disconnect();
+            node.send({
+              payload: {
+                data: data,
+                deviceVirtualId: msg.payload.deviceVirtualId,
+                deviceKey: msg.payload.deviceKey,
+                deviceName: msg.payload.deviceName,
+                deviceIp: msg.payload.deviceIp,
+                requestID: requestID,
+              },
+            });
+          });
+        }
+        let findDevice = () => {
+          setStatusConnecting();
+          node.logger.debug(`[${requestID}] initiating the find command`);
+          tuyaDevice
+            .find({})
+            .then(() => {
+              // Connect to device
+              tuyaDevice.connect();
+            })
+            .catch((e) => {
+              // We need to retry
+              setStatusOnError(e.message, requestID, "Can't find device", {
+                context: {
+                  message: e,
+                  deviceVirtualId: msg.payload.deviceVirtualId,
+                  deviceKey: msg.payload.deviceKey,
+                  deviceIp: msg.payload.deviceIp,
+                },
+              });
+              node.logger.error(`[${requestID}] Cannot find the device`);
+              //setTimeout(findDevice, 1000);
+            });
+        };
+        findDevice();
+      } catch (error) {
+        console.error('Uncaught exception occured ! ', error);
+        setStatusOnError(
+          error.message,
+          requestID,
+          'Uncaught error : ' + error.message,
+          {
+            context: {
+              message: error,
+              deviceVirtualId: msg.payload.deviceVirtualId,
+              deviceKey: msg.payload.deviceKey,
+              deviceIp: msg.payload.deviceIp,
+            },
+          }
+        );
+      }
     });
     let setStatusConnecting = function () {
       return node.status({ fill: 'yellow', shape: 'ring', text: 'connecting' });
@@ -179,7 +198,7 @@ module.exports = function (RED) {
       errorShortText = 'error',
       data
     ) {
-      node.error(`[${requestID}] An error had occured : ${errorText}`, data);
+      node.logger.error(`[${requestID}] An error had occured : ${errorText}`);
       return node.status({ fill: 'red', shape: 'ring', text: errorShortText });
     };
 

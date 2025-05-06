@@ -1,5 +1,9 @@
 # Changelog
 
+## 5.3.2
+
+- Fixes handling of TuyaApi crash
+
 ## 5.3.1
 
 - Added support for Tuyapi 7.7.0 (supports protocol version 3.5)

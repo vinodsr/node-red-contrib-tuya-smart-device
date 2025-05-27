@@ -81,89 +81,173 @@ module.exports = function (RED) {
           });
         });
         tuyaDevice.on('connected', () => {
-          node.logger.log(
-            `[${requestID}]  Connected to device! ${msg.payload.deviceVirtualId}`
-          );
-          setStatusConnected();
-          switch (operation) {
-            case 'SET':
-              node.logger.debug(
-                `[${requestID}]  sending command SET : ${JSON.stringify(
-                  msg.payload.payload
-                )}`
-              );
-              tuyaDevice.set(msg.payload.payload);
-              break;
-            default:
-              node.logger.error(
-                `[${requestID}] Invalid operation ${operation}`
-              );
+          try {
+            node.logger.log(
+              `[${requestID}]  Connected to device! ${msg.payload.deviceVirtualId}`
+            );
+            setStatusConnected();
+
+            switch (operation) {
+              case 'SET':
+                node.logger.debug(
+                  `[${requestID}]  sending command SET : ${JSON.stringify(
+                    msg.payload.payload
+                  )}`
+                );
+                tuyaDevice.set(msg.payload.payload).catch((error) => {
+                  setStatusOnError(
+                    error.message,
+                    requestID,
+                    'Uncaught error : ' + error.message,
+                    {
+                      context: {
+                        message: error,
+                        deviceVirtualId: msg.payload.deviceVirtualId,
+                        deviceKey: msg.payload.deviceKey,
+                        deviceIp: msg.payload.deviceIp,
+                        requestID: requestID,
+                      },
+                    }
+                  );
+                });
+                break;
+              default:
+                node.logger.error(
+                  `[${requestID}] Invalid operation ${operation}`
+                );
+            }
+          } catch (error) {
+            setStatusOnError(
+              error.message,
+              requestID,
+              'Uncaught error : ' + error.message,
+              {
+                context: {
+                  message: error,
+                  deviceVirtualId: msg.payload.deviceVirtualId,
+                  deviceKey: msg.payload.deviceKey,
+                  deviceIp: msg.payload.deviceIp,
+                  requestID: requestID,
+                },
+              }
+            );
           }
         });
 
         if (shouldSubscribeRefreshData) {
           tuyaDevice.on('dp-refresh', (data) => {
-            node.logger.debug(
-              `[${requestID}] Data from device [event:dp-refresh]: ${JSON.stringify(
-                data
-              )}`
-            );
-            tuyaDevice.disconnect();
-            node.send({
-              payload: {
-                data: data,
-                deviceVirtualId: msg.payload.deviceVirtualId,
-                deviceKey: msg.payload.deviceKey,
-                deviceName: msg.payload.deviceName,
-                deviceIp: msg.payload.deviceIp,
-                requestID: requestID,
-              },
-            });
+            try {
+              node.logger.debug(
+                `[${requestID}] Data from device [event:dp-refresh]: ${JSON.stringify(
+                  data
+                )}`
+              );
+              tuyaDevice.disconnect();
+              node.send({
+                payload: {
+                  data: data,
+                  deviceVirtualId: msg.payload.deviceVirtualId,
+                  deviceKey: msg.payload.deviceKey,
+                  deviceName: msg.payload.deviceName,
+                  deviceIp: msg.payload.deviceIp,
+                  requestID: requestID,
+                },
+              });
+            } catch (error) {
+              setStatusOnError(
+                error.message,
+                requestID,
+                'Uncaught error : ' + error.message,
+                {
+                  context: {
+                    message: error,
+                    deviceVirtualId: msg.payload.deviceVirtualId,
+                    deviceKey: msg.payload.deviceKey,
+                    deviceIp: msg.payload.deviceIp,
+                    requestID: requestID,
+                  },
+                }
+              );
+            }
           });
         }
 
         if (shouldSubscribeData) {
           tuyaDevice.on('data', (data) => {
-            node.logger.debug(
-              `[${requestID}] Data from device [event:data]: ${JSON.stringify(
-                data
-              )}`
-            );
-            tuyaDevice.disconnect();
-            node.send({
-              payload: {
-                data: data,
-                deviceVirtualId: msg.payload.deviceVirtualId,
-                deviceKey: msg.payload.deviceKey,
-                deviceName: msg.payload.deviceName,
-                deviceIp: msg.payload.deviceIp,
-                requestID: requestID,
-              },
-            });
+            try {
+              node.logger.debug(
+                `[${requestID}] Data from device [event:data]: ${JSON.stringify(
+                  data
+                )}`
+              );
+              tuyaDevice.disconnect();
+              node.send({
+                payload: {
+                  data: data,
+                  deviceVirtualId: msg.payload.deviceVirtualId,
+                  deviceKey: msg.payload.deviceKey,
+                  deviceName: msg.payload.deviceName,
+                  deviceIp: msg.payload.deviceIp,
+                  requestID: requestID,
+                },
+              });
+            } catch (error) {
+              setStatusOnError(
+                error.message,
+                requestID,
+                'Uncaught error : ' + error.message,
+                {
+                  context: {
+                    message: error,
+                    deviceVirtualId: msg.payload.deviceVirtualId,
+                    deviceKey: msg.payload.deviceKey,
+                    deviceIp: msg.payload.deviceIp,
+                    requestID: requestID,
+                  },
+                }
+              );
+            }
           });
         }
         let findDevice = () => {
-          setStatusConnecting();
-          node.logger.debug(`[${requestID}] initiating the find command`);
-          tuyaDevice
-            .find({})
-            .then(() => {
-              // Connect to device
-              tuyaDevice.connect();
-            })
-            .catch((e) => {
-              // We need to retry
-              setStatusOnError(e.message, requestID, "Can't find device", {
+          try {
+            setStatusConnecting();
+            node.logger.debug(`[${requestID}] initiating the find command`);
+            tuyaDevice
+              .find({})
+              .then(() => {
+                // Connect to device
+                tuyaDevice.connect();
+              })
+              .catch((e) => {
+                // We need to retry
+                setStatusOnError(e.message, requestID, "Can't find device", {
+                  context: {
+                    message: e,
+                    deviceVirtualId: msg.payload.deviceVirtualId,
+                    deviceKey: msg.payload.deviceKey,
+                    deviceIp: msg.payload.deviceIp,
+                  },
+                });
+                node.logger.error(`[${requestID}] Cannot find the device`);
+                //setTimeout(findDevice, 1000);
+              });
+          } catch (error) {
+            setStatusOnError(
+              error.message,
+              requestID,
+              'Uncaught error : ' + error.message,
+              {
                 context: {
-                  message: e,
+                  message: error,
                   deviceVirtualId: msg.payload.deviceVirtualId,
                   deviceKey: msg.payload.deviceKey,
                   deviceIp: msg.payload.deviceIp,
+                  requestID: requestID,
                 },
-              });
-              node.logger.error(`[${requestID}] Cannot find the device`);
-              //setTimeout(findDevice, 1000);
-            });
+              }
+            );
+          }
         };
         findDevice();
       } catch (error) {

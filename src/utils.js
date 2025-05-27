@@ -22,11 +22,9 @@ const UI_LOG_LEVELS = {
 const noop = () => {};
 const createLogger = (node, level) => {
   return {
-    log: (msg, data) => (level >= LOG_LEVELS.INFO ? node.log(msg, data) : noop),
-    debug: (msg, data) =>
-      level >= LOG_LEVELS.DEBUG ? node.debug(msg, data) : noop,
-    error: (msg, data) =>
-      level >= LOG_LEVELS.ERROR ? node.error(msg, data) : noop,
+    log: (msg, data) => (level >= LOG_LEVELS.INFO ? node.log(msg) : noop),
+    debug: (msg, data) => (level >= LOG_LEVELS.DEBUG ? node.debug(msg) : noop),
+    error: (msg, data) => (level >= LOG_LEVELS.ERROR ? node.error(msg) : noop),
   };
 };
 

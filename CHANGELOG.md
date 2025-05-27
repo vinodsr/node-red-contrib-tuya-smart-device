@@ -1,5 +1,9 @@
 # Changelog
 
+## 5.3.3
+
+- Better error handling and fixes node-red crash
+
 ## 5.3.2
 
 - Fixes handling of TuyaApi crash

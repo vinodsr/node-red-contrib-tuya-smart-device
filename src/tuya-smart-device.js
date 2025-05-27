@@ -137,13 +137,52 @@ module.exports = function (RED) {
         }
         switch (operation) {
           case 'SET':
-            tuyaDevice.set(msg.payload);
+            tuyaDevice.set(msg.payload).catch((error) => {
+              setStatusOnError(
+                error.message,
+                'Uncaught error : ' + error.message,
+                {
+                  context: {
+                    message: error.message,
+                    deviceVirtualId: node.deviceId,
+                    deviceIp: node.deviceIp,
+                    deviceKey: node.deviceKey,
+                  },
+                }
+              );
+            });
             break;
           case 'REFRESH':
-            tuyaDevice.refresh(msg.payload);
+            tuyaDevice.refresh(msg.payload).catch((error) => {
+              setStatusOnError(
+                error.message,
+                'Uncaught error : ' + error.message,
+                {
+                  context: {
+                    message: error.message,
+                    deviceVirtualId: node.deviceId,
+                    deviceIp: node.deviceIp,
+                    deviceKey: node.deviceKey,
+                  },
+                }
+              );
+            });
             break;
           case 'GET':
-            tuyaDevice.get(msg.payload);
+            tuyaDevice.get(msg.payload).catch((error) => {
+              setStatusOnError(
+                error.message,
+                'Uncaught error : ' + error.message,
+                {
+                  context: {
+                    message: error.message,
+                    deviceVirtualId: node.deviceId,
+                    deviceIp: node.deviceIp,
+                    deviceKey: node.deviceKey,
+                  },
+                }
+              );
+            });
             break;
           case 'CONTROL':
             if (msg.payload.action == 'CONNECT') {
@@ -195,7 +234,6 @@ module.exports = function (RED) {
             break;
         }
       } catch (error) {
-        console.error('Uncaught exception occured ! ', error);
         setStatusOnError(error.message, 'Uncaught error : ' + error.message, {
           context: {
             message: error.message,
@@ -232,13 +270,24 @@ module.exports = function (RED) {
     };
 
     const closeComm = () => {
-      node.logger.log('closeComm(): Cleaning up the state');
-      node.logger.debug('closeComm(): Clearing the find timeout handler');
-      clearTimeout(findTimeoutHandler);
-      shouldTryReconnect = false;
-      node.logger.debug('closeComm(): Disconnecting from Tuya Device');
-      tuyaDevice.disconnect();
-      setStatusDisconnected();
+      try {
+        node.logger.log('closeComm(): Cleaning up the state');
+        node.logger.debug('closeComm(): Clearing the find timeout handler');
+        clearTimeout(findTimeoutHandler);
+        shouldTryReconnect = false;
+        node.logger.debug('closeComm(): Disconnecting from Tuya Device');
+        tuyaDevice.disconnect();
+        setStatusDisconnected();
+      } catch (error) {
+        setStatusOnError(error.message, 'Uncaught error : ' + error.message, {
+          context: {
+            message: error.message,
+            deviceVirtualId: node.deviceId,
+            deviceIp: node.deviceIp,
+            deviceKey: node.deviceKey,
+          },
+        });
+      }
     };
 
     const startComm = () => {
@@ -329,159 +378,236 @@ module.exports = function (RED) {
 
     // Add event listeners
     tuyaDevice.on('connected', () => {
-      node.logger.log(
-        'Connected to device! name : ' +
-          node.deviceName +
-          ', ip : ' +
-          node.deviceIp
-      );
-      setStatusConnected();
+      try {
+        node.logger.log(
+          'Connected to device! name : ' +
+            node.deviceName +
+            ', ip : ' +
+            node.deviceIp
+        );
+        setStatusConnected();
+      } catch (error) {
+        setStatusOnError(error.message, 'Uncaught error : ' + error.message, {
+          context: {
+            message: error.message,
+            deviceVirtualId: node.deviceId,
+            deviceIp: node.deviceIp,
+            deviceKey: node.deviceKey,
+          },
+        });
+      }
     });
 
     tuyaDevice.on('disconnected', () => {
-      node.logger.log(
-        'Disconnected from tuyaDevice. shouldTryReconnect = ' +
-          shouldTryReconnect
-      );
-      setStatusDisconnected();
-      if (shouldTryReconnect) {
-        retryConnection();
+      try {
+        node.logger.log(
+          'Disconnected from tuyaDevice. shouldTryReconnect = ' +
+            shouldTryReconnect
+        );
+        setStatusDisconnected();
+        if (shouldTryReconnect) {
+          retryConnection();
+        }
+      } catch (error) {
+        setStatusOnError(error.message, 'Uncaught error : ' + error.message, {
+          context: {
+            message: error.message,
+            deviceVirtualId: node.deviceId,
+            deviceIp: node.deviceIp,
+            deviceKey: node.deviceKey,
+          },
+        });
       }
     });
 
     tuyaDevice.on('error', (error) => {
-      node.logger.error(
-        'Error from tuyaDevice. shouldTryReconnect = ' +
-          shouldTryReconnect +
-          ', error  = ' +
-          JSON.stringify(error)
-      );
-      // Anonymize
-      setStatusOnError(error, 'Error : ' + JSON.stringify(error), {
-        context: {
-          message: error,
-          deviceVirtualId: node.deviceId,
-          deviceIp: node.deviceIp,
-          deviceKey: node.deviceKey,
-        },
-      });
-      if (
-        typeof error === 'string' &&
-        error.startsWith('Timeout waiting for status response')
-      ) {
+      try {
         node.logger.error(
-          'This error can be due to invalid DPS values. Please check the dps values in the payload !!!!'
+          'Error from tuyaDevice. shouldTryReconnect = ' +
+            shouldTryReconnect +
+            ', error  = ' +
+            JSON.stringify(error)
         );
-      }
-      if (shouldTryReconnect) {
-        retryConnection();
+        // Anonymize
+        setStatusOnError(error, 'Error : ' + JSON.stringify(error), {
+          context: {
+            message: error,
+            deviceVirtualId: node.deviceId,
+            deviceIp: node.deviceIp,
+            deviceKey: node.deviceKey,
+          },
+        });
+        if (
+          typeof error === 'string' &&
+          error.startsWith('Timeout waiting for status response')
+        ) {
+          node.logger.error(
+            'This error can be due to invalid DPS values. Please check the dps values in the payload !!!!'
+          );
+        }
+        if (shouldTryReconnect) {
+          retryConnection();
+        }
+      } catch (error) {
+        setStatusOnError(error.message, 'Uncaught error : ' + error.message, {
+          context: {
+            message: error.message,
+            deviceVirtualId: node.deviceId,
+            deviceIp: node.deviceIp,
+            deviceKey: node.deviceKey,
+          },
+        });
       }
     });
 
     tuyaDevice.on('dp-refresh', (data) => {
-      if (shouldSubscribeRefreshData) {
-        node.logger.debug(
-          `Data from device  [event:dp-refresh]: ${JSON.stringify(data)}`
-        );
-        setStatusConnected();
-        node.send([
-          {
-            payload: {
-              data: data,
-              deviceId: node.deviceId,
-              deviceName: node.deviceName,
+      try {
+        if (shouldSubscribeRefreshData) {
+          node.logger.debug(
+            `Data from device  [event:dp-refresh]: ${JSON.stringify(data)}`
+          );
+          setStatusConnected();
+          node.send([
+            {
+              payload: {
+                data: data,
+                deviceId: node.deviceId,
+                deviceName: node.deviceName,
+              },
             },
+            null,
+          ]);
+        }
+      } catch (error) {
+        setStatusOnError(error.message, 'Uncaught error : ' + error.message, {
+          context: {
+            message: error.message,
+            deviceVirtualId: node.deviceId,
+            deviceIp: node.deviceIp,
+            deviceKey: node.deviceKey,
           },
-          null,
-        ]);
+        });
       }
     });
 
     tuyaDevice.on('data', (data) => {
-      if (shouldSubscribeData) {
-        node.logger.debug(
-          `Data from device  [event:data]: ${JSON.stringify(data)}`
-        );
-        setStatusConnected();
-        node.send([
-          {
-            payload: {
-              data: data,
-              deviceId: node.deviceId,
-              deviceName: node.deviceName,
+      try {
+        if (shouldSubscribeData) {
+          node.logger.debug(
+            `Data from device  [event:data]: ${JSON.stringify(data)}`
+          );
+          setStatusConnected();
+          node.send([
+            {
+              payload: {
+                data: data,
+                deviceId: node.deviceId,
+                deviceName: node.deviceName,
+              },
             },
+            null,
+          ]);
+        }
+      } catch (error) {
+        setStatusOnError(error.message, 'Uncaught error : ' + error.message, {
+          context: {
+            message: error.message,
+            deviceVirtualId: node.deviceId,
+            deviceIp: node.deviceIp,
+            deviceKey: node.deviceKey,
           },
-          null,
-        ]);
+        });
       }
     });
 
     let connectDevice = () => {
-      clearTimeout(findTimeoutHandler);
-      if (tuyaDevice.isConnected() === false) {
-        setStatusConnecting();
-        const connectHandle = tuyaDevice.connect();
-        connectHandle.catch((e) => {
-          setStatusDisconnected();
-          node.logger.error(
-            `connectDevice(): An error had occurred with tuya API on connect method : ${JSON.stringify(
-              e
-            )}`
-          );
-          if (shouldTryReconnect) {
-            node.logger.log('connectDevice(): retrying the connect');
-            if (findTimeoutHandler) {
-              clearTimeout(findTimeoutHandler);
-            }
-            findTimeoutHandler = setTimeout(findDevice, node.retryTimeout);
-          } else {
-            node.logger.debug(
-              'connectDevice(): not retrying the find as shouldTryReconnect = false'
+      try {
+        clearTimeout(findTimeoutHandler);
+        if (tuyaDevice.isConnected() === false) {
+          setStatusConnecting();
+          const connectHandle = tuyaDevice.connect();
+          connectHandle.catch((e) => {
+            setStatusDisconnected();
+            node.logger.error(
+              `connectDevice(): An error had occurred with tuya API on connect method : ${JSON.stringify(
+                e
+              )}`
             );
-          }
+            if (shouldTryReconnect) {
+              node.logger.log('connectDevice(): retrying the connect');
+              if (findTimeoutHandler) {
+                clearTimeout(findTimeoutHandler);
+              }
+              findTimeoutHandler = setTimeout(findDevice, node.retryTimeout);
+            } else {
+              node.logger.debug(
+                'connectDevice(): not retrying the find as shouldTryReconnect = false'
+              );
+            }
+          });
+        } else {
+          node.logger.debug(
+            'connectDevice() : already connected. skippig the connect call'
+          );
+          setStatusConnected();
+        }
+      } catch (error) {
+        setStatusOnError(error.message, 'Uncaught error : ' + error.message, {
+          context: {
+            message: error.message,
+            deviceVirtualId: node.deviceId,
+            deviceIp: node.deviceIp,
+            deviceKey: node.deviceKey,
+          },
         });
-      } else {
-        node.logger.debug(
-          'connectDevice() : already connected. skippig the connect call'
-        );
-        setStatusConnected();
       }
     };
     let findDevice = () => {
-      setStatusConnecting();
-      node.logger.log('findDevice(): Initiating the find command');
-      tuyaDevice
-        .find({
-          timeout: parseInt(node.findTimeout / 1000),
-        })
-        .then(() => {
-          node.logger.log('findDevice(): Found device, going to connect');
-          // Connect to device
-          connectDevice();
-        })
-        .catch((e) => {
-          // We need to retry
-          setStatusOnError(e.message, "Can't find device", {
-            context: {
-              message: e,
-              deviceVirtualId: node.deviceId,
-              deviceIp: node.deviceIp,
-              deviceKey: node.deviceKey,
-              deviceName: node.deviceName,
-            },
+      try {
+        setStatusConnecting();
+        node.logger.log('findDevice(): Initiating the find command');
+        tuyaDevice
+          .find({
+            timeout: parseInt(node.findTimeout / 1000),
+          })
+          .then(() => {
+            node.logger.log('findDevice(): Found device, going to connect');
+            // Connect to device
+            connectDevice();
+          })
+          .catch((e) => {
+            // We need to retry
+            setStatusOnError(e.message, "Can't find device", {
+              context: {
+                message: e,
+                deviceVirtualId: node.deviceId,
+                deviceIp: node.deviceIp,
+                deviceKey: node.deviceKey,
+                deviceName: node.deviceName,
+              },
+            });
+            setStatusDisconnected();
+            if (shouldTryReconnect) {
+              node.logger.error(
+                'findDevice(): Cannot find the device, re-trying...'
+              );
+              findTimeoutHandler = setTimeout(findDevice, node.retryTimeout);
+            } else {
+              node.logger.debug(
+                'findDevice(): not retrying the find as shouldTryReconnect = false'
+              );
+            }
           });
-          setStatusDisconnected();
-          if (shouldTryReconnect) {
-            node.logger.error(
-              'findDevice(): Cannot find the device, re-trying...'
-            );
-            findTimeoutHandler = setTimeout(findDevice, node.retryTimeout);
-          } else {
-            node.logger.debug(
-              'findDevice(): not retrying the find as shouldTryReconnect = false'
-            );
-          }
+      } catch (error) {
+        setStatusOnError(error.message, 'Uncaught error : ' + error.message, {
+          context: {
+            message: error.message,
+            deviceVirtualId: node.deviceId,
+            deviceIp: node.deviceIp,
+            deviceKey: node.deviceKey,
+          },
         });
+      }
     };
 
     // Initial state

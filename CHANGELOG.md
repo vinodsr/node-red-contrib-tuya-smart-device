@@ -1,5 +1,9 @@
 # Changelog
 
+## 5.4.0
+
+- Improved logic for connect / disconnect for normal node
+
 ## 5.3.3
 
 - Better error handling and fixes node-red crash

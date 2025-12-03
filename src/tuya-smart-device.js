@@ -187,7 +187,8 @@ module.exports = function (RED) {
           case 'CONTROL':
             if (msg.payload.action == 'CONNECT') {
               if (!tuyaDevice.isConnected()) {
-                // Connect only when disconnected
+                // Connect only when disconnected            //vinod
+                initTuya();
                 startComm();
               }
             } else if (msg.payload.action == 'DISCONNECT') {
@@ -358,8 +359,6 @@ module.exports = function (RED) {
       issueRefreshOnConnect: false,
     };
 
-    let tuyaDevice = new TuyaDevice(connectionParams);
-
     let retryConnection = () => {
       clearTimeout(retryTimerHandler);
       retryTimerHandler = setTimeout(() => {
@@ -376,149 +375,156 @@ module.exports = function (RED) {
       closeComm();
     });
 
-    // Add event listeners
-    tuyaDevice.on('connected', () => {
-      try {
-        node.logger.log(
-          'Connected to device! name : ' +
-            node.deviceName +
-            ', ip : ' +
-            node.deviceIp
-        );
-        setStatusConnected();
-      } catch (error) {
-        setStatusOnError(error.message, 'Uncaught error : ' + error.message, {
-          context: {
-            message: error.message,
-            deviceVirtualId: node.deviceId,
-            deviceIp: node.deviceIp,
-            deviceKey: node.deviceKey,
-          },
-        });
-      }
-    });
+    let tuyaDevice = null;
+    let initTuya = () => {
+      tuyaDevice = new TuyaDevice(connectionParams);
 
-    tuyaDevice.on('disconnected', () => {
-      try {
-        node.logger.log(
-          'Disconnected from tuyaDevice. shouldTryReconnect = ' +
-            shouldTryReconnect
-        );
-        setStatusDisconnected();
-        if (shouldTryReconnect) {
-          retryConnection();
+      // Add event listeners
+      tuyaDevice.on('connected', () => {
+        try {
+          node.logger.log(
+            'Connected to device! name : ' +
+              node.deviceName +
+              ', ip : ' +
+              node.deviceIp
+          );
+          setStatusConnected();
+        } catch (error) {
+          setStatusOnError(error.message, 'Uncaught error : ' + error.message, {
+            context: {
+              message: error.message,
+              deviceVirtualId: node.deviceId,
+              deviceIp: node.deviceIp,
+              deviceKey: node.deviceKey,
+            },
+          });
         }
-      } catch (error) {
-        setStatusOnError(error.message, 'Uncaught error : ' + error.message, {
-          context: {
-            message: error.message,
-            deviceVirtualId: node.deviceId,
-            deviceIp: node.deviceIp,
-            deviceKey: node.deviceKey,
-          },
-        });
-      }
-    });
+      });
 
-    tuyaDevice.on('error', (error) => {
-      try {
-        node.logger.error(
-          'Error from tuyaDevice. shouldTryReconnect = ' +
-            shouldTryReconnect +
-            ', error  = ' +
-            JSON.stringify(error)
-        );
-        // Anonymize
-        setStatusOnError(error, 'Error : ' + JSON.stringify(error), {
-          context: {
-            message: error,
-            deviceVirtualId: node.deviceId,
-            deviceIp: node.deviceIp,
-            deviceKey: node.deviceKey,
-          },
-        });
-        if (
-          typeof error === 'string' &&
-          error.startsWith('Timeout waiting for status response')
-        ) {
+      tuyaDevice.on('disconnected', () => {
+        try {
+          node.logger.log(
+            'Disconnected from tuyaDevice. shouldTryReconnect = ' +
+              shouldTryReconnect
+          );
+          setStatusDisconnected();
+          if (shouldTryReconnect) {
+            retryConnection();
+          }
+        } catch (error) {
+          setStatusOnError(error.message, 'Uncaught error : ' + error.message, {
+            context: {
+              message: error.message,
+              deviceVirtualId: node.deviceId,
+              deviceIp: node.deviceIp,
+              deviceKey: node.deviceKey,
+            },
+          });
+        }
+      });
+
+      tuyaDevice.on('error', (error) => {
+        try {
           node.logger.error(
-            'This error can be due to invalid DPS values. Please check the dps values in the payload !!!!'
+            'Error from tuyaDevice. shouldTryReconnect = ' +
+              shouldTryReconnect +
+              ', error  = ' +
+              JSON.stringify(error)
           );
-        }
-        if (shouldTryReconnect) {
-          retryConnection();
-        }
-      } catch (error) {
-        setStatusOnError(error.message, 'Uncaught error : ' + error.message, {
-          context: {
-            message: error.message,
-            deviceVirtualId: node.deviceId,
-            deviceIp: node.deviceIp,
-            deviceKey: node.deviceKey,
-          },
-        });
-      }
-    });
-
-    tuyaDevice.on('dp-refresh', (data) => {
-      try {
-        if (shouldSubscribeRefreshData) {
-          node.logger.debug(
-            `Data from device  [event:dp-refresh]: ${JSON.stringify(data)}`
-          );
-          setStatusConnected();
-          node.send([
-            {
-              payload: {
-                data: data,
-                deviceId: node.deviceId,
-                deviceName: node.deviceName,
-              },
+          // Anonymize
+          setStatusOnError(error, 'Error : ' + JSON.stringify(error), {
+            context: {
+              message: error,
+              deviceVirtualId: node.deviceId,
+              deviceIp: node.deviceIp,
+              deviceKey: node.deviceKey,
             },
-            null,
-          ]);
-        }
-      } catch (error) {
-        setStatusOnError(error.message, 'Uncaught error : ' + error.message, {
-          context: {
-            message: error.message,
-            deviceVirtualId: node.deviceId,
-            deviceIp: node.deviceIp,
-            deviceKey: node.deviceKey,
-          },
-        });
-      }
-    });
-
-    tuyaDevice.on('data', (data) => {
-      try {
-        if (shouldSubscribeData) {
-          node.logger.debug(
-            `Data from device  [event:data]: ${JSON.stringify(data)}`
-          );
-          setStatusConnected();
-          node.send([
-            {
-              payload: {
-                data: data,
-                deviceId: node.deviceId,
-                deviceName: node.deviceName,
-              },
+          });
+          if (
+            typeof error === 'string' &&
+            error.startsWith('Timeout waiting for status response')
+          ) {
+            node.logger.error(
+              'This error can be due to invalid DPS values. Please check the dps values in the payload !!!!'
+            );
+          }
+          if (shouldTryReconnect) {
+            retryConnection();
+          }
+        } catch (error) {
+          setStatusOnError(error.message, 'Uncaught error : ' + error.message, {
+            context: {
+              message: error.message,
+              deviceVirtualId: node.deviceId,
+              deviceIp: node.deviceIp,
+              deviceKey: node.deviceKey,
             },
-            null,
-          ]);
+          });
         }
-      } catch (error) {
-        setStatusOnError(error.message, 'Uncaught error : ' + error.message, {
-          context: {
-            message: error.message,
-            deviceVirtualId: node.deviceId,
-            deviceIp: node.deviceIp,
-            deviceKey: node.deviceKey,
-          },
-        });
-      }
-    });
+      });
+
+      tuyaDevice.on('dp-refresh', (data) => {
+        try {
+          if (shouldSubscribeRefreshData) {
+            node.logger.debug(
+              `Data from device  [event:dp-refresh]: ${JSON.stringify(data)}`
+            );
+            setStatusConnected();
+            node.send([
+              {
+                payload: {
+                  data: data,
+                  deviceId: node.deviceId,
+                  deviceName: node.deviceName,
+                },
+              },
+              null,
+            ]);
+          }
+        } catch (error) {
+          setStatusOnError(error.message, 'Uncaught error : ' + error.message, {
+            context: {
+              message: error.message,
+              deviceVirtualId: node.deviceId,
+              deviceIp: node.deviceIp,
+              deviceKey: node.deviceKey,
+            },
+          });
+        }
+      });
+
+      tuyaDevice.on('data', (data) => {
+        try {
+          if (shouldSubscribeData) {
+            node.logger.debug(
+              `Data from device  [event:data]: ${JSON.stringify(data)}`
+            );
+            setStatusConnected();
+            node.send([
+              {
+                payload: {
+                  data: data,
+                  deviceId: node.deviceId,
+                  deviceName: node.deviceName,
+                },
+              },
+              null,
+            ]);
+          }
+        } catch (error) {
+          setStatusOnError(error.message, 'Uncaught error : ' + error.message, {
+            context: {
+              message: error.message,
+              deviceVirtualId: node.deviceId,
+              deviceIp: node.deviceIp,
+              deviceKey: node.deviceKey,
+            },
+          });
+        }
+      });
+    };
+    // Initialize on startup
+    initTuya();
 
     let connectDevice = () => {
       try {
